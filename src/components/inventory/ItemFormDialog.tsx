@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useState, useRef, useEffect, type FormEvent } from 'react'
 import { toast } from 'sonner'
 import { useInventoryStore } from '@/store'
 import { CATEGORIES, UNITS, LOCATIONS } from '@/lib/constants'
@@ -45,6 +45,14 @@ const emptyForm: FormState = {
 export function ItemFormDialog({ open, onOpenChange, editItem }: ItemFormDialogProps) {
   const addItem = useInventoryStore(s => s.addItem)
   const updateItem = useInventoryStore(s => s.updateItem)
+  const nameRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (open) {
+      // small delay to let the dialog portal mount
+      requestAnimationFrame(() => nameRef.current?.focus())
+    }
+  }, [open])
 
   const isEditing = !!editItem
 
@@ -109,6 +117,7 @@ export function ItemFormDialog({ open, onOpenChange, editItem }: ItemFormDialogP
     onOpenChange(false)
     setForm({ ...emptyForm })
     setErrors({})
+    ;(document.activeElement as HTMLElement)?.blur()
   }
 
   function resetAndClose(open: boolean) {
@@ -130,6 +139,7 @@ export function ItemFormDialog({ open, onOpenChange, editItem }: ItemFormDialogP
           <div className="space-y-2">
             <Label htmlFor="name">Name</Label>
             <Input
+              ref={nameRef}
               id="name"
               placeholder="e.g. Olive Oil"
               value={form.name}

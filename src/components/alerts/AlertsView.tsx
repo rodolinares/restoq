@@ -1,13 +1,16 @@
-import { useMemo } from 'react'
-import { BellOff } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { BellOff, RotateCcw } from 'lucide-react'
 import { useInventoryStore } from '@/store'
+import { Button } from '@/components/ui/button'
 
 export function AlertsView() {
   const items = useInventoryStore(s => s.items)
+  const resetAll = useInventoryStore(s => s.resetAll)
   const lowStockItems = useMemo(
     () => items.filter(item => item.quantity <= item.minThreshold),
     [items]
   )
+  const [confirmReset, setConfirmReset] = useState(false)
 
   if (lowStockItems.length === 0) {
     return (
@@ -39,6 +42,42 @@ export function AlertsView() {
           </span>
         </div>
       ))}
+
+      <hr className="my-6 border-border" />
+
+      <div className="flex justify-center pb-4">
+        {confirmReset ? (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Delete all items?</span>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => {
+                resetAll()
+                setConfirmReset(false)
+              }}
+            >
+              Confirm
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setConfirmReset(false)}
+            >
+              Cancel
+            </Button>
+          </div>
+        ) : (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setConfirmReset(true)}
+          >
+            <RotateCcw className="mr-1.5 size-3.5" />
+            Reset all data
+          </Button>
+        )}
+      </div>
     </div>
   )
 }
