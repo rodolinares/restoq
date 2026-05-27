@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { InventoryItem } from '@/types'
+import type { InventoryItem, ConsumptionEvent } from '@/types'
 
 
 function generateId(): string {
@@ -9,6 +9,7 @@ function generateId(): string {
 
 export interface InventoryStore {
   items: InventoryItem[]
+  consumptionLog: ConsumptionEvent[]
   addItem: (item: Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt'>) => void
   updateItem: (id: string, updates: Partial<Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt'>>) => void
   removeItem: (id: string) => void
@@ -21,6 +22,7 @@ export const useInventoryStore = create<InventoryStore>()(
   persist(
     (set, get) => ({
       items: [],
+      consumptionLog: [],
 
       addItem: item =>
         set(state => ({
@@ -50,18 +52,28 @@ export const useInventoryStore = create<InventoryStore>()(
         })),
 
       adjustQuantity: (id, delta) =>
-        set(state => ({
-          items: state.items.map(item =>
+        set(state => {
+          const items = state.items.map(item =>
             item.id === id
               ? { ...item, quantity: item.quantity + delta, updatedAt: Date.now() }
               : item
-          ),
-        })),
+          )
+          if (delta >= 0) return { items }
+          const updatedItem = items.find(i => i.id === id)!
+          const event: ConsumptionEvent = {
+            id: generateId(),
+            itemId: id,
+            delta,
+            quantityAfter: updatedItem.quantity,
+            timestamp: Date.now(),
+          }
+          return { items, consumptionLog: [...state.consumptionLog, event] }
+        }),
 
       lowStockItems: () => get().items.filter(item => item.quantity <= item.minThreshold),
 
       resetAll: () => {
-        set({ items: [] })
+        set({ items: [], consumptionLog: [] })
       },
     }),
     {

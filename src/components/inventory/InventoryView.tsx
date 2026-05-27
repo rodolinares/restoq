@@ -2,15 +2,16 @@ import { useState, useMemo } from 'react'
 import { Minus, PackageOpen, Plus, Search, Trash2, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { useInventoryStore } from '@/store'
+import { simpleEngine } from '@/lib/prediction'
 import { CATEGORIES, LOCATIONS } from '@/lib/constants'
-import type { InventoryItem, Location } from '@/types'
+import type { InventoryItem, Location, ItemPrediction } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ItemFormDialog } from './ItemFormDialog'
 import { ConfirmDeleteDialog } from './ConfirmDeleteDialog'
 
-type SortKey = 'name-asc' | 'name-desc' | 'qty-asc' | 'qty-desc' | 'updated-desc' | 'updated-asc'
+type SortKey = 'name-asc' | 'name-desc' | 'qty-asc' | 'qty-desc' | 'updated-desc' | 'updated-asc' | 'urgency-asc'
 
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: 'name-asc', label: 'Name (A-Z)' },
@@ -19,9 +20,14 @@ const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: 'qty-desc', label: 'Qty (highest)' },
   { value: 'updated-desc', label: 'Recent first' },
   { value: 'updated-asc', label: 'Oldest first' },
+  { value: 'urgency-asc', label: 'Urgency (soonest)' },
 ]
 
-function sortItems(items: InventoryItem[], sortKey: SortKey): InventoryItem[] {
+function sortItems(
+  items: InventoryItem[],
+  sortKey: SortKey,
+  predictions: Map<string, ItemPrediction | null>,
+): InventoryItem[] {
   const copy = [...items]
   switch (sortKey) {
     case 'name-asc':
@@ -36,11 +42,18 @@ function sortItems(items: InventoryItem[], sortKey: SortKey): InventoryItem[] {
       return copy.sort((a, b) => b.updatedAt - a.updatedAt)
     case 'updated-asc':
       return copy.sort((a, b) => a.updatedAt - b.updatedAt)
+    case 'urgency-asc':
+      return copy.sort((a, b) => {
+        const da = predictions.get(a.id)?.daysUntilEmpty ?? Infinity
+        const db = predictions.get(b.id)?.daysUntilEmpty ?? Infinity
+        return da - db
+      })
   }
 }
 
 export function InventoryView() {
   const items = useInventoryStore(s => s.items)
+  const consumptionLog = useInventoryStore(s => s.consumptionLog)
   const adjustQuantity = useInventoryStore(s => s.adjustQuantity)
   const removeItem = useInventoryStore(s => s.removeItem)
 
@@ -52,6 +65,20 @@ export function InventoryView() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<InventoryItem | undefined>(undefined)
   const [deletingItem, setDeletingItem] = useState<InventoryItem | undefined>(undefined)
+
+  const predictions = useMemo(() => {
+    const map = new Map<string, ItemPrediction | null>()
+    for (const item of items) {
+      const history = consumptionLog.filter(e => e.itemId === item.id)
+      map.set(
+        item.id,
+        history.length > 0
+          ? simpleEngine.predict(item.quantity, item.minThreshold, history)
+          : null,
+      )
+    }
+    return map
+  }, [items, consumptionLog])
 
   const filteredItems = useMemo(() => {
     let result = items
@@ -69,8 +96,8 @@ export function InventoryView() {
       result = result.filter(item => item.category === categoryFilter)
     }
 
-    return sortItems(result, sortKey)
-  }, [items, search, locationFilter, categoryFilter, sortKey])
+    return sortItems(result, sortKey, predictions)
+  }, [items, search, locationFilter, categoryFilter, sortKey, predictions])
 
   const hasFilters = search || locationFilter !== '__all__' || categoryFilter !== '__all__'
 
@@ -214,6 +241,25 @@ export function InventoryView() {
                       {item.quantity} {item.unit} &middot; {item.location}
                       {item.category ? ` · ${item.category}` : ''}
                     </p>
+                    {(() => {
+                      const p = predictions.get(item.id)
+                      if (!p || p.daysUntilEmpty === null) return null
+                      const d = p.daysUntilEmpty
+                      const color = d <= 0
+                        ? 'text-destructive'
+                        : d <= 7
+                          ? 'text-amber-600 dark:text-amber-400'
+                          : 'text-muted-foreground'
+                      return (
+                        <p className={'mt-0.5 truncate text-xs ' + color}>
+                          {d <= 0
+                            ? 'Overdue'
+                            : `~${Math.round(d)} day${Math.round(d) === 1 ? '' : 's'}`
+                          }
+                          {p.confidence === 'low' && ' (estimate)'}
+                        </p>
+                      )
+                    })()}
                   </button>
 
                   {item.quantity <= item.minThreshold && (

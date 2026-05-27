@@ -1,18 +1,36 @@
 import { useMemo, useState } from 'react'
 import { BellOff, RotateCcw } from 'lucide-react'
 import { useInventoryStore } from '@/store'
+import { simpleEngine } from '@/lib/prediction'
+import type { InventoryItem, ItemPrediction } from '@/types'
 import { Button } from '@/components/ui/button'
 
 export function AlertsView() {
   const items = useInventoryStore(s => s.items)
+  const consumptionLog = useInventoryStore(s => s.consumptionLog)
   const resetAll = useInventoryStore(s => s.resetAll)
-  const lowStockItems = useMemo(
-    () => items.filter(item => item.quantity <= item.minThreshold),
-    [items]
-  )
+
+  const entries = useMemo(() => {
+    const low = items.filter(item => item.quantity <= item.minThreshold)
+    const withPrediction: { item: InventoryItem; prediction: ItemPrediction | null }[] = []
+    for (const item of low) {
+      const history = consumptionLog.filter(e => e.itemId === item.id)
+      const prediction = history.length > 0
+        ? simpleEngine.predict(item.quantity, item.minThreshold, history)
+        : null
+      withPrediction.push({ item, prediction })
+    }
+    withPrediction.sort((a, b) => {
+      const da = a.prediction?.daysUntilEmpty ?? Infinity
+      const db = b.prediction?.daysUntilEmpty ?? Infinity
+      return da - db
+    })
+    return withPrediction
+  }, [items, consumptionLog])
+
   const [confirmReset, setConfirmReset] = useState(false)
 
-  if (lowStockItems.length === 0) {
+  if (entries.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">
         <BellOff className="size-12 text-muted-foreground" />
@@ -26,7 +44,7 @@ export function AlertsView() {
 
   return (
     <div className="space-y-2">
-      {lowStockItems.map(item => (
+      {entries.map(({ item, prediction }) => (
         <div
           key={item.id}
           className="flex items-center justify-between rounded-lg border border-border bg-destructive/5 px-4 py-3"
@@ -36,6 +54,25 @@ export function AlertsView() {
             <p className="text-sm text-muted-foreground">
               {item.quantity} / {item.minThreshold} {item.unit}
             </p>
+            {prediction && prediction.daysUntilEmpty !== null && (
+              (() => {
+                const d = prediction.daysUntilEmpty
+                const color = d <= 0
+                  ? 'text-destructive'
+                  : d <= 7
+                    ? 'text-amber-600 dark:text-amber-400'
+                    : 'text-muted-foreground'
+                return (
+                  <p className={'mt-0.5 text-xs ' + color}>
+                    {d <= 0
+                      ? 'Overdue for restock'
+                      : `~${Math.round(d)} day${Math.round(d) === 1 ? '' : 's'} until empty`
+                    }
+                    {prediction.confidence === 'low' && ' (estimate)'}
+                  </p>
+                )
+              })()
+            )}
           </div>
           <span className={'ml-2 shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ' + (item.quantity === 0 ? 'bg-destructive text-destructive-foreground' : 'badge-low')}>
             {item.quantity === 0 ? 'Out' : 'Low'}
