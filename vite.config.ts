@@ -6,6 +6,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: '/restoq/',
   plugins: [
     react(),
     tailwindcss(),
@@ -18,11 +19,11 @@ export default defineConfig({
         theme_color: '#18181b',
         background_color: '#ffffff',
         display: 'standalone',
-        scope: '/',
-        start_url: '/',
+        scope: '/restoq/',
+        start_url: '/restoq/',
         icons: [
           {
-            src: '/restoq-icon.svg',
+            src: '/restoq/restoq-icon.svg',
             sizes: 'any',
             type: 'image/svg+xml',
             purpose: 'any maskable',

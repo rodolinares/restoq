@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "format": "prettier \"src/**/*.{css,ts,tsx}\" --write"
+    "format": "prettier \"src/**/*.{css,ts,tsx}\" --write",
+    "deploy": "pnpm build && npx gh-pages -d dist"
   },
   "dependencies": {
     "@fontsource-variable/geist": "^5.2.9",
