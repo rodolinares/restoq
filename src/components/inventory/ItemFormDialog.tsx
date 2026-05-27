@@ -9,12 +9,18 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogClose,
+  DialogClose
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
 
 interface ItemFormDialogProps {
   open: boolean
@@ -39,7 +45,7 @@ const emptyForm: FormState = {
   minThreshold: '0',
   unit: 'pcs',
   location: 'pantry',
-  notes: '',
+  notes: ''
 }
 
 export function ItemFormDialog({ open, onOpenChange, editItem }: ItemFormDialogProps) {
@@ -65,7 +71,7 @@ export function ItemFormDialog({ open, onOpenChange, editItem }: ItemFormDialogP
           minThreshold: String(editItem.minThreshold),
           unit: editItem.unit,
           location: editItem.location,
-          notes: editItem.notes ?? '',
+          notes: editItem.notes ?? ''
         }
       : { ...emptyForm }
   )
@@ -76,9 +82,11 @@ export function ItemFormDialog({ open, onOpenChange, editItem }: ItemFormDialogP
     const next: typeof errors = {}
     if (!form.name.trim()) next.name = 'Name is required'
     const qty = Number(form.quantity)
-    if (!Number.isFinite(qty) || qty < 0 || !Number.isInteger(qty)) next.quantity = 'Must be a whole number ≥ 0'
+    if (!Number.isFinite(qty) || qty < 0 || !Number.isInteger(qty))
+      next.quantity = 'Must be a whole number ≥ 0'
     const threshold = Number(form.minThreshold)
-    if (!Number.isFinite(threshold) || threshold < 0 || !Number.isInteger(threshold)) next.minThreshold = 'Must be a whole number ≥ 0'
+    if (!Number.isFinite(threshold) || threshold < 0 || !Number.isInteger(threshold))
+      next.minThreshold = 'Must be a whole number ≥ 0'
     setErrors(next)
     return Object.keys(next).length === 0
   }
@@ -98,7 +106,7 @@ export function ItemFormDialog({ open, onOpenChange, editItem }: ItemFormDialogP
         minThreshold,
         unit: form.unit,
         location: form.location,
-        notes: form.notes.trim() || undefined,
+        notes: form.notes.trim() || undefined
       })
       toast(`${form.name.trim()} updated`)
     } else {
@@ -109,7 +117,7 @@ export function ItemFormDialog({ open, onOpenChange, editItem }: ItemFormDialogP
         minThreshold,
         unit: form.unit,
         location: form.location,
-        notes: form.notes.trim() || undefined,
+        notes: form.notes.trim() || undefined
       })
       toast(`${form.name.trim()} added to inventory`)
     }
@@ -193,7 +201,9 @@ export function ItemFormDialog({ open, onOpenChange, editItem }: ItemFormDialogP
                 onChange={e => setForm(f => ({ ...f, minThreshold: e.target.value }))}
                 aria-invalid={!!errors.minThreshold}
               />
-              {errors.minThreshold && <p className="text-xs text-destructive">{errors.minThreshold}</p>}
+              {errors.minThreshold && (
+                <p className="text-xs text-destructive">{errors.minThreshold}</p>
+              )}
             </div>
           </div>
 

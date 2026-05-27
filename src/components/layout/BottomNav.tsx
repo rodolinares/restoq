@@ -10,7 +10,7 @@ interface BottomNavProps {
 
 const tabs: { id: TabId; label: string; icon: typeof Package }[] = [
   { id: 'inventory', label: 'Inventory', icon: Package },
-  { id: 'alerts', label: 'Alerts', icon: Bell },
+  { id: 'alerts', label: 'Alerts', icon: Bell }
 ]
 
 export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
@@ -27,9 +27,7 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
           onClick={() => onTabChange(id)}
           className={
             'relative flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium transition-colors ' +
-            (activeTab === id
-              ? 'text-foreground'
-              : 'text-muted-foreground hover:text-foreground')
+            (activeTab === id ? 'text-foreground' : 'text-muted-foreground hover:text-foreground')
           }
         >
           <Icon className="size-5" />

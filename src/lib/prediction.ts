@@ -30,7 +30,7 @@ export const simpleEngine: PredictionEngine = {
     return {
       daysUntilEmpty: Math.round(daysUntilEmpty * 10) / 10,
       daysUntilThreshold: Math.round(daysUntilThreshold * 10) / 10,
-      confidence: confidenceLevel(history.length),
+      confidence: confidenceLevel(history.length)
     }
-  },
+  }
 }

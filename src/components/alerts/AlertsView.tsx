@@ -15,9 +15,8 @@ export function AlertsView() {
     const withPrediction: { item: InventoryItem; prediction: ItemPrediction | null }[] = []
     for (const item of low) {
       const history = consumptionLog.filter(e => e.itemId === item.id)
-      const prediction = history.length > 0
-        ? simpleEngine.predict(item.quantity, item.minThreshold, history)
-        : null
+      const prediction =
+        history.length > 0 ? simpleEngine.predict(item.quantity, item.minThreshold, history) : null
       withPrediction.push({ item, prediction })
     }
     withPrediction.sort((a, b) => {
@@ -54,27 +53,32 @@ export function AlertsView() {
             <p className="text-sm text-muted-foreground">
               {item.quantity} / {item.minThreshold} {item.unit}
             </p>
-            {prediction && prediction.daysUntilEmpty !== null && (
+            {prediction &&
+              prediction.daysUntilEmpty !== null &&
               (() => {
                 const d = prediction.daysUntilEmpty
-                const color = d <= 0
-                  ? 'text-destructive'
-                  : d <= 7
-                    ? 'text-amber-600 dark:text-amber-400'
-                    : 'text-muted-foreground'
+                const color =
+                  d <= 0
+                    ? 'text-destructive'
+                    : d <= 7
+                      ? 'text-amber-600 dark:text-amber-400'
+                      : 'text-muted-foreground'
                 return (
                   <p className={'mt-0.5 text-xs ' + color}>
                     {d <= 0
                       ? 'Overdue for restock'
-                      : `~${Math.round(d)} day${Math.round(d) === 1 ? '' : 's'} until empty`
-                    }
+                      : `~${Math.round(d)} day${Math.round(d) === 1 ? '' : 's'} until empty`}
                     {prediction.confidence === 'low' && ' (estimate)'}
                   </p>
                 )
-              })()
-            )}
+              })()}
           </div>
-          <span className={'ml-2 shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ' + (item.quantity === 0 ? 'bg-destructive text-destructive-foreground' : 'badge-low')}>
+          <span
+            className={
+              'ml-2 shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ' +
+              (item.quantity === 0 ? 'bg-destructive text-destructive-foreground' : 'badge-low')
+            }
+          >
             {item.quantity === 0 ? 'Out' : 'Low'}
           </span>
         </div>
@@ -96,20 +100,12 @@ export function AlertsView() {
             >
               Confirm
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setConfirmReset(false)}
-            >
+            <Button variant="outline" size="sm" onClick={() => setConfirmReset(false)}>
               Cancel
             </Button>
           </div>
         ) : (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setConfirmReset(true)}
-          >
+          <Button variant="ghost" size="sm" onClick={() => setConfirmReset(true)}>
             <RotateCcw className="mr-1.5 size-3.5" />
             Reset all data
           </Button>

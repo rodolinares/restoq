@@ -1,14 +1,4 @@
-export type Unit =
-  | 'pcs'
-  | 'kg'
-  | 'g'
-  | 'l'
-  | 'ml'
-  | 'tbsp'
-  | 'tsp'
-  | 'cup'
-  | 'oz'
-  | 'lb'
+export type Unit = 'pcs' | 'kg' | 'g' | 'l' | 'ml' | 'tbsp' | 'tsp' | 'cup' | 'oz' | 'lb'
 
 export type Location = 'pantry' | 'fridge' | 'freezer' | 'bathroom' | 'cleaning' | 'other'
 
@@ -44,6 +34,6 @@ export interface PredictionEngine {
   predict: (
     quantity: number,
     minThreshold: number,
-    history: ConsumptionEvent[],
+    history: ConsumptionEvent[]
   ) => ItemPrediction | null
 }

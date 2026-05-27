@@ -3,7 +3,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogClose,
+  DialogClose
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 
@@ -14,7 +14,12 @@ interface ConfirmDeleteDialogProps {
   onConfirm: () => void
 }
 
-export function ConfirmDeleteDialog({ open, onOpenChange, itemName, onConfirm }: ConfirmDeleteDialogProps) {
+export function ConfirmDeleteDialog({
+  open,
+  onOpenChange,
+  itemName,
+  onConfirm
+}: ConfirmDeleteDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -30,12 +35,7 @@ export function ConfirmDeleteDialog({ open, onOpenChange, itemName, onConfirm }:
               Cancel
             </Button>
           </DialogClose>
-          <Button
-            type="button"
-            variant="destructive"
-            className="flex-1"
-            onClick={onConfirm}
-          >
+          <Button type="button" variant="destructive" className="flex-1" onClick={onConfirm}>
             Delete
           </Button>
         </div>

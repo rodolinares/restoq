@@ -7,11 +7,24 @@ import { CATEGORIES, LOCATIONS } from '@/lib/constants'
 import type { InventoryItem, Location, ItemPrediction } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
 import { ItemFormDialog } from './ItemFormDialog'
 import { ConfirmDeleteDialog } from './ConfirmDeleteDialog'
 
-type SortKey = 'name-asc' | 'name-desc' | 'qty-asc' | 'qty-desc' | 'updated-desc' | 'updated-asc' | 'urgency-asc'
+type SortKey =
+  | 'name-asc'
+  | 'name-desc'
+  | 'qty-asc'
+  | 'qty-desc'
+  | 'updated-desc'
+  | 'updated-asc'
+  | 'urgency-asc'
 
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: 'name-asc', label: 'Name (A-Z)' },
@@ -20,13 +33,13 @@ const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: 'qty-desc', label: 'Qty (highest)' },
   { value: 'updated-desc', label: 'Recent first' },
   { value: 'updated-asc', label: 'Oldest first' },
-  { value: 'urgency-asc', label: 'Urgency (soonest)' },
+  { value: 'urgency-asc', label: 'Urgency (soonest)' }
 ]
 
 function sortItems(
   items: InventoryItem[],
   sortKey: SortKey,
-  predictions: Map<string, ItemPrediction | null>,
+  predictions: Map<string, ItemPrediction | null>
 ): InventoryItem[] {
   const copy = [...items]
   switch (sortKey) {
@@ -72,9 +85,7 @@ export function InventoryView() {
       const history = consumptionLog.filter(e => e.itemId === item.id)
       map.set(
         item.id,
-        history.length > 0
-          ? simpleEngine.predict(item.quantity, item.minThreshold, history)
-          : null,
+        history.length > 0 ? simpleEngine.predict(item.quantity, item.minThreshold, history) : null
       )
     }
     return map
@@ -151,7 +162,10 @@ export function InventoryView() {
 
           <div className="flex gap-2">
             <div className="flex-1">
-              <Select value={locationFilter} onValueChange={v => setLocationFilter(v as Location | '__all__')}>
+              <Select
+                value={locationFilter}
+                onValueChange={v => setLocationFilter(v as Location | '__all__')}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="All locations" />
                 </SelectTrigger>
@@ -208,7 +222,16 @@ export function InventoryView() {
                 {hasFilters ? 'No items match your filters' : 'No items yet'}
               </p>
               {hasFilters && (
-                <Button type="button" variant="ghost" size="sm" onClick={() => { setSearch(''); setLocationFilter('__all__'); setCategoryFilter('__all__') }}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setSearch('')
+                    setLocationFilter('__all__')
+                    setCategoryFilter('__all__')
+                  }}
+                >
                   Clear filters
                 </Button>
               )}
@@ -245,17 +268,17 @@ export function InventoryView() {
                       const p = predictions.get(item.id)
                       if (!p || p.daysUntilEmpty === null) return null
                       const d = p.daysUntilEmpty
-                      const color = d <= 0
-                        ? 'text-destructive'
-                        : d <= 7
-                          ? 'text-amber-600 dark:text-amber-400'
-                          : 'text-muted-foreground'
+                      const color =
+                        d <= 0
+                          ? 'text-destructive'
+                          : d <= 7
+                            ? 'text-amber-600 dark:text-amber-400'
+                            : 'text-muted-foreground'
                       return (
                         <p className={'mt-0.5 truncate text-xs ' + color}>
                           {d <= 0
                             ? 'Overdue'
-                            : `~${Math.round(d)} day${Math.round(d) === 1 ? '' : 's'}`
-                          }
+                            : `~${Math.round(d)} day${Math.round(d) === 1 ? '' : 's'}`}
                           {p.confidence === 'low' && ' (estimate)'}
                         </p>
                       )
@@ -263,7 +286,12 @@ export function InventoryView() {
                   </button>
 
                   {item.quantity <= item.minThreshold && (
-                    <span className={'shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ' + (item.quantity === 0 ? 'badge-out' : 'badge-low')}>
+                    <span
+                      className={
+                        'shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ' +
+                        (item.quantity === 0 ? 'badge-out' : 'badge-low')
+                      }
+                    >
                       {item.quantity === 0 ? 'Out' : 'Low'}
                     </span>
                   )}
@@ -304,11 +332,7 @@ export function InventoryView() {
         <Plus className="size-6" />
       </Button>
 
-      <ItemFormDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        editItem={editingItem}
-      />
+      <ItemFormDialog open={dialogOpen} onOpenChange={setDialogOpen} editItem={editingItem} />
 
       <ConfirmDeleteDialog
         open={!!deletingItem}

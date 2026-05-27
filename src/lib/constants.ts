@@ -10,7 +10,7 @@ export const UNITS: { value: Unit; label: string }[] = [
   { value: 'tsp', label: 'Teaspoons' },
   { value: 'cup', label: 'Cups' },
   { value: 'oz', label: 'Ounces' },
-  { value: 'lb', label: 'Pounds' },
+  { value: 'lb', label: 'Pounds' }
 ]
 
 export const CATEGORIES: { value: string; label: string }[] = [
@@ -24,7 +24,7 @@ export const CATEGORIES: { value: string; label: string }[] = [
   { value: 'Snacks', label: 'Snacks' },
   { value: 'Cleaning', label: 'Cleaning' },
   { value: 'Personal Care', label: 'Personal Care' },
-  { value: 'Other', label: 'Other' },
+  { value: 'Other', label: 'Other' }
 ]
 
 export const LOCATIONS: { value: Location; label: string }[] = [
@@ -33,5 +33,5 @@ export const LOCATIONS: { value: Location; label: string }[] = [
   { value: 'freezer', label: 'Freezer' },
   { value: 'bathroom', label: 'Bathroom' },
   { value: 'cleaning', label: 'Cleaning' },
-  { value: 'other', label: 'Other' },
+  { value: 'other', label: 'Other' }
 ]

@@ -15,7 +15,13 @@ function App() {
   return (
     <>
       <AppShell
-        header={<Header theme={theme} onToggleTheme={toggleTheme} onAlertsClick={() => setActiveTab('alerts')} />}
+        header={
+          <Header
+            theme={theme}
+            onToggleTheme={toggleTheme}
+            onAlertsClick={() => setActiveTab('alerts')}
+          />
+        }
         nav={<BottomNav activeTab={activeTab} onTabChange={setActiveTab} />}
       >
         {activeTab === 'inventory' ? <InventoryView /> : <AlertsView />}
@@ -23,7 +29,11 @@ function App() {
       <Toaster
         position="bottom-center"
         toastOptions={{
-          style: { background: 'var(--popover)', color: 'var(--popover-foreground)', border: '1px solid var(--border)' },
+          style: {
+            background: 'var(--popover)',
+            color: 'var(--popover-foreground)',
+            border: '1px solid var(--border)'
+          }
         }}
       />
     </>
