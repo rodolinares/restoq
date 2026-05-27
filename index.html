@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/restoq/favicon.svg" />
+    <link rel="apple-touch-icon" href="/restoq/restoq-icon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <script>
+      (function() {
+        var t = localStorage.getItem('restoq-theme');
+        if (!t) t = matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light';
+        document.documentElement.classList.toggle('dark', t === 'dark');
+      })();
+    </script>
+    <meta name="theme-color" content="#18181b" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="RestoQ" />
+    <title>RestoQ</title>
+    <script type="module" crossorigin src="/restoq/assets/index-DTZWrI_S.js"></script>
+    <link rel="stylesheet" crossorigin href="/restoq/assets/index-C1sqjD9n.css">
+  <link rel="manifest" href="/restoq/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/restoq/registerSW.js"></script></head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

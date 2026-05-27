@@ -1,0 +1,1 @@
+{"name":"RestoQ","short_name":"RestoQ","description":"Home inventory tracker","start_url":"/restoq/","display":"standalone","background_color":"#ffffff","theme_color":"#18181b","lang":"en","scope":"/restoq/","icons":[{"src":"/restoq/restoq-icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}
