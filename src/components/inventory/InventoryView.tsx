@@ -1,9 +1,12 @@
-import { useState } from 'react'
-import { Minus, PackageOpen, Plus, Trash2 } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { Minus, PackageOpen, Plus, Search, Trash2, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { useInventoryStore } from '@/store'
-import type { InventoryItem } from '@/types'
+import { CATEGORIES, LOCATIONS } from '@/lib/constants'
+import type { InventoryItem, Location } from '@/types'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ItemFormDialog } from './ItemFormDialog'
 import { ConfirmDeleteDialog } from './ConfirmDeleteDialog'
 
@@ -11,9 +14,35 @@ export function InventoryView() {
   const items = useInventoryStore(s => s.items)
   const adjustQuantity = useInventoryStore(s => s.adjustQuantity)
   const removeItem = useInventoryStore(s => s.removeItem)
+
+  const [search, setSearch] = useState('')
+  const [locationFilter, setLocationFilter] = useState<Location | '__all__'>('__all__')
+  const [categoryFilter, setCategoryFilter] = useState('__all__')
+
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<InventoryItem | undefined>(undefined)
   const [deletingItem, setDeletingItem] = useState<InventoryItem | undefined>(undefined)
+
+  const filteredItems = useMemo(() => {
+    let result = items
+
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      result = result.filter(item => item.name.toLowerCase().includes(q))
+    }
+
+    if (locationFilter !== '__all__') {
+      result = result.filter(item => item.location === locationFilter)
+    }
+
+    if (categoryFilter !== '__all__') {
+      result = result.filter(item => item.category === categoryFilter)
+    }
+
+    return result
+  }, [items, search, locationFilter, categoryFilter])
+
+  const hasFilters = search || locationFilter !== '__all__' || categoryFilter !== '__all__'
 
   function openAdd() {
     setEditingItem(undefined)
@@ -42,63 +71,132 @@ export function InventoryView() {
           </p>
         </div>
       ) : (
-        <div className="space-y-2">
-          {items.map(item => (
-            <div
-              key={item.id}
-              className="flex items-center gap-2 rounded-lg border border-border px-3 py-2.5"
-            >
-              <Button
-                type="button"
-                size="icon-xs"
-                variant="outline"
-                disabled={item.quantity <= 0}
-                onClick={() => adjustQuantity(item.id, -1)}
-                aria-label="Decrease quantity"
-              >
-                <Minus className="size-3" />
-              </Button>
-
+        <div className="space-y-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search items..."
+              className="pl-9 pr-8"
+            />
+            {search && (
               <button
                 type="button"
-                onClick={() => openEdit(item)}
-                className="min-w-0 flex-1 text-left"
+                onClick={() => setSearch('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label="Clear search"
               >
-                <p className="truncate text-sm font-medium leading-tight">{item.name}</p>
-                <p className="truncate text-xs text-muted-foreground">
-                  {item.quantity} {item.unit} &middot; {item.location}
-                  {item.category ? ` · ${item.category}` : ''}
-                </p>
+                <X className="size-4" />
               </button>
+            )}
+          </div>
 
-              {item.quantity <= item.minThreshold && (
-                <span className={'shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ' + (item.quantity === 0 ? 'badge-out' : 'badge-low')}>
-                  {item.quantity === 0 ? 'Out' : 'Low'}
-                </span>
-              )}
-
-              <Button
-                type="button"
-                size="icon-xs"
-                variant="outline"
-                onClick={() => adjustQuantity(item.id, 1)}
-                aria-label="Increase quantity"
-              >
-                <Plus className="size-3" />
-              </Button>
-
-              <Button
-                type="button"
-                size="icon-xs"
-                variant="ghost"
-                onClick={() => setDeletingItem(item)}
-                aria-label="Delete item"
-                className="text-muted-foreground hover:text-destructive"
-              >
-                <Trash2 className="size-3" />
-              </Button>
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <Select value={locationFilter} onValueChange={v => setLocationFilter(v as Location | '__all__')}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All locations" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">All locations</SelectItem>
+                  {LOCATIONS.map(l => (
+                    <SelectItem key={l.value} value={l.value}>
+                      {l.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          ))}
+            <div className="flex-1">
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">All categories</SelectItem>
+                  {CATEGORIES.map(c => (
+                    <SelectItem key={c.value} value={c.value}>
+                      {c.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {filteredItems.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
+              <Search className="size-8 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">
+                {hasFilters ? 'No items match your filters' : 'No items yet'}
+              </p>
+              {hasFilters && (
+                <Button type="button" variant="ghost" size="sm" onClick={() => { setSearch(''); setLocationFilter('__all__'); setCategoryFilter('__all__') }}>
+                  Clear filters
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {filteredItems.map(item => (
+                <div
+                  key={item.id}
+                  className="flex items-center gap-2 rounded-lg border border-border px-3 py-2.5"
+                >
+                  <Button
+                    type="button"
+                    size="icon-xs"
+                    variant="outline"
+                    disabled={item.quantity <= 0}
+                    onClick={() => adjustQuantity(item.id, -1)}
+                    aria-label="Decrease quantity"
+                  >
+                    <Minus className="size-3" />
+                  </Button>
+
+                  <button
+                    type="button"
+                    onClick={() => openEdit(item)}
+                    className="min-w-0 flex-1 text-left"
+                  >
+                    <p className="truncate text-sm font-medium leading-tight">{item.name}</p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {item.quantity} {item.unit} &middot; {item.location}
+                      {item.category ? ` · ${item.category}` : ''}
+                    </p>
+                  </button>
+
+                  {item.quantity <= item.minThreshold && (
+                    <span className={'shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ' + (item.quantity === 0 ? 'badge-out' : 'badge-low')}>
+                      {item.quantity === 0 ? 'Out' : 'Low'}
+                    </span>
+                  )}
+
+                  <Button
+                    type="button"
+                    size="icon-xs"
+                    variant="outline"
+                    onClick={() => adjustQuantity(item.id, 1)}
+                    aria-label="Increase quantity"
+                  >
+                    <Plus className="size-3" />
+                  </Button>
+
+                  <Button
+                    type="button"
+                    size="icon-xs"
+                    variant="ghost"
+                    onClick={() => setDeletingItem(item)}
+                    aria-label="Delete item"
+                    className="text-muted-foreground hover:text-destructive"
+                  >
+                    <Trash2 className="size-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
