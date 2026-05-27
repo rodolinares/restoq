@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { Minus, PackageOpen, Plus, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { useInventoryStore } from '@/store'
 import type { InventoryItem } from '@/types'
 import { Button } from '@/components/ui/button'
 import { ItemFormDialog } from './ItemFormDialog'
+import { ConfirmDeleteDialog } from './ConfirmDeleteDialog'
 
 export function InventoryView() {
   const items = useInventoryStore(s => s.items)
@@ -11,6 +13,7 @@ export function InventoryView() {
   const removeItem = useInventoryStore(s => s.removeItem)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<InventoryItem | undefined>(undefined)
+  const [deletingItem, setDeletingItem] = useState<InventoryItem | undefined>(undefined)
 
   function openAdd() {
     setEditingItem(undefined)
@@ -20,6 +23,12 @@ export function InventoryView() {
   function openEdit(item: InventoryItem) {
     setEditingItem(item)
     setDialogOpen(true)
+  }
+
+  function handleDelete(item: InventoryItem) {
+    removeItem(item.id)
+    setDeletingItem(undefined)
+    toast(`${item.name} deleted`, { icon: <Trash2 className="size-4" /> })
   }
 
   return (
@@ -82,7 +91,7 @@ export function InventoryView() {
                 type="button"
                 size="icon-xs"
                 variant="ghost"
-                onClick={() => removeItem(item.id)}
+                onClick={() => setDeletingItem(item)}
                 aria-label="Delete item"
                 className="text-muted-foreground hover:text-destructive"
               >
@@ -106,6 +115,13 @@ export function InventoryView() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         editItem={editingItem}
+      />
+
+      <ConfirmDeleteDialog
+        open={!!deletingItem}
+        onOpenChange={open => !open && setDeletingItem(undefined)}
+        itemName={deletingItem?.name ?? ''}
+        onConfirm={() => deletingItem && handleDelete(deletingItem)}
       />
     </>
   )

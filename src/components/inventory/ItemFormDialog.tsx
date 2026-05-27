@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
+import { toast } from 'sonner'
 import { useInventoryStore } from '@/store'
-import { UNITS, LOCATIONS } from '@/lib/constants'
+import { CATEGORIES, UNITS, LOCATIONS } from '@/lib/constants'
 import type { InventoryItem, Unit, Location } from '@/types'
 
 import {
@@ -91,6 +92,7 @@ export function ItemFormDialog({ open, onOpenChange, editItem }: ItemFormDialogP
         location: form.location,
         notes: form.notes.trim() || undefined,
       })
+      toast(`${form.name.trim()} updated`)
     } else {
       addItem({
         name: form.name.trim(),
@@ -101,6 +103,7 @@ export function ItemFormDialog({ open, onOpenChange, editItem }: ItemFormDialogP
         location: form.location,
         notes: form.notes.trim() || undefined,
       })
+      toast(`${form.name.trim()} added to inventory`)
     }
 
     onOpenChange(false)
@@ -137,13 +140,22 @@ export function ItemFormDialog({ open, onOpenChange, editItem }: ItemFormDialogP
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="category">Category</Label>
-            <Input
-              id="category"
-              placeholder="e.g. Cooking"
+            <Label>Category</Label>
+            <Select
               value={form.category}
-              onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
-            />
+              onValueChange={v => setForm(f => ({ ...f, category: v }))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                {CATEGORIES.map(c => (
+                  <SelectItem key={c.value} value={c.value}>
+                    {c.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -224,7 +236,7 @@ export function ItemFormDialog({ open, onOpenChange, editItem }: ItemFormDialogP
             />
           </div>
 
-          <div className="flex gap-3 pt-2">
+          <div className="flex gap-3 pt-2 pb-4">
             <DialogClose asChild>
               <Button type="button" variant="outline" className="flex-1">
                 Cancel

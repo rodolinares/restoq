@@ -38,7 +38,7 @@ export const SEED_ITEMS: InventoryItem[] = [
   {
     id: id('chicken'),
     name: 'Chicken Breast',
-    category: 'Meat',
+    category: 'Meat & Seafood',
     quantity: 0,
     minThreshold: 1,
     unit: 'kg',
