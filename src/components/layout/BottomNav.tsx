@@ -14,7 +14,9 @@ const tabs: { id: TabId; label: string; icon: typeof Package }[] = [
 ]
 
 export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
-  const lowStockCount = useInventoryStore(s => s.lowStockItems().length)
+  const lowStockCount = useInventoryStore(s =>
+    s.items.reduce((acc, item) => (item.quantity <= item.minThreshold ? acc + 1 : acc), 0)
+  )
 
   return (
     <nav className="flex border-t border-border bg-background pb-[env(safe-area-inset-bottom,0px)]">

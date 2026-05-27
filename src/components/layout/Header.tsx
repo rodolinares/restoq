@@ -2,7 +2,9 @@ import { Bell, Package } from 'lucide-react'
 import { useInventoryStore } from '@/store'
 
 export function Header() {
-  const lowStockCount = useInventoryStore(s => s.lowStockItems().length)
+  const lowStockCount = useInventoryStore(s =>
+    s.items.reduce((acc, item) => (item.quantity <= item.minThreshold ? acc + 1 : acc), 0)
+  )
 
   return (
     <header className="flex items-center justify-between border-b border-border bg-background px-4 py-3">

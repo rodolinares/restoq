@@ -1,8 +1,13 @@
+import { useMemo } from 'react'
 import { BellOff } from 'lucide-react'
 import { useInventoryStore } from '@/store'
 
 export function AlertsView() {
-  const lowStockItems = useInventoryStore(s => s.lowStockItems())
+  const items = useInventoryStore(s => s.items)
+  const lowStockItems = useMemo(
+    () => items.filter(item => item.quantity <= item.minThreshold),
+    [items]
+  )
 
   if (lowStockItems.length === 0) {
     return (
