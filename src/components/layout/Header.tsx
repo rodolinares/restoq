@@ -37,7 +37,7 @@ export function Header({ theme, onToggleTheme, onAlertsClick }: HeaderProps) {
         >
           <Bell className="size-5" />
           {lowStockCount > 0 && (
-            <span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground">
+            <span className="absolute right-0 top-0 flex size-4 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-white">
               {lowStockCount}
             </span>
           )}

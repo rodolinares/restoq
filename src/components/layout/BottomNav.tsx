@@ -35,7 +35,7 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
           <Icon className="size-5" />
           <span>{label}</span>
           {id === 'alerts' && lowStockCount > 0 && (
-            <span className="absolute right-1/4 top-1 flex size-4 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground">
+            <span className="absolute right-21 top-1 flex size-4 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-white">
               {lowStockCount}
             </span>
           )}
