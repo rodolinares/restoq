@@ -10,6 +10,35 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ItemFormDialog } from './ItemFormDialog'
 import { ConfirmDeleteDialog } from './ConfirmDeleteDialog'
 
+type SortKey = 'name-asc' | 'name-desc' | 'qty-asc' | 'qty-desc' | 'updated-desc' | 'updated-asc'
+
+const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+  { value: 'name-asc', label: 'Name (A-Z)' },
+  { value: 'name-desc', label: 'Name (Z-A)' },
+  { value: 'qty-asc', label: 'Qty (lowest)' },
+  { value: 'qty-desc', label: 'Qty (highest)' },
+  { value: 'updated-desc', label: 'Recent first' },
+  { value: 'updated-asc', label: 'Oldest first' },
+]
+
+function sortItems(items: InventoryItem[], sortKey: SortKey): InventoryItem[] {
+  const copy = [...items]
+  switch (sortKey) {
+    case 'name-asc':
+      return copy.sort((a, b) => a.name.localeCompare(b.name))
+    case 'name-desc':
+      return copy.sort((a, b) => b.name.localeCompare(a.name))
+    case 'qty-asc':
+      return copy.sort((a, b) => a.quantity - b.quantity)
+    case 'qty-desc':
+      return copy.sort((a, b) => b.quantity - a.quantity)
+    case 'updated-desc':
+      return copy.sort((a, b) => b.updatedAt - a.updatedAt)
+    case 'updated-asc':
+      return copy.sort((a, b) => a.updatedAt - b.updatedAt)
+  }
+}
+
 export function InventoryView() {
   const items = useInventoryStore(s => s.items)
   const adjustQuantity = useInventoryStore(s => s.adjustQuantity)
@@ -18,6 +47,7 @@ export function InventoryView() {
   const [search, setSearch] = useState('')
   const [locationFilter, setLocationFilter] = useState<Location | '__all__'>('__all__')
   const [categoryFilter, setCategoryFilter] = useState('__all__')
+  const [sortKey, setSortKey] = useState<SortKey>('name-asc')
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<InventoryItem | undefined>(undefined)
@@ -39,8 +69,8 @@ export function InventoryView() {
       result = result.filter(item => item.category === categoryFilter)
     }
 
-    return result
-  }, [items, search, locationFilter, categoryFilter])
+    return sortItems(result, sortKey)
+  }, [items, search, locationFilter, categoryFilter, sortKey])
 
   const hasFilters = search || locationFilter !== '__all__' || categoryFilter !== '__all__'
 
@@ -123,7 +153,26 @@ export function InventoryView() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="w-32 shrink-0">
+              <Select value={sortKey} onValueChange={v => setSortKey(v as SortKey)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SORT_OPTIONS.map(o => (
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+
+          <p className="text-xs text-muted-foreground">
+            {filteredItems.length} {filteredItems.length === 1 ? 'item' : 'items'}
+            {hasFilters && items.length !== filteredItems.length && ` of ${items.length}`}
+          </p>
 
           {filteredItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
