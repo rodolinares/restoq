@@ -1,73 +1,63 @@
-# React + TypeScript + Vite
+# RestoQ — Home Inventory Tracker
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Track what you have, predict what you'll need.
 
-Currently, two official plugins are available:
+A mobile-first PWA for managing home inventory with low-stock alerts and consumption-based depletion predictions. All data stays local — no backend, no sign-up.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Stack
 
-## React Compiler
+| Layer                | Technology                              |
+| -------------------- | --------------------------------------- |
+| Bundler / Dev Server | Vite 8                                  |
+| UI Framework         | React 19 + TypeScript 6.0               |
+| Styling              | Tailwind CSS 4 + shadcn/ui (radix-nova) |
+| State Management     | Zustand 5 (persisted to localStorage)   |
+| Font                 | Geist Variable                          |
+| Icons                | Lucide                                  |
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Getting Started
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```sh
+pnpm install
+pnpm dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Open the URL Vite prints (usually `http://localhost:5173`).
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Features
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- **Inventory CRUD** — add, edit, delete items with quantity, unit, category, location, and notes.
+- **Quantity adjustments** — tap `+` / `-` to restock or consume. Consumption events are automatically logged.
+- **Consumption predictions** — each item card shows an estimated time until empty based on past usage rate. Confidence level adjusts with more data points (low < 2, medium 2–4, high 5+).
+- **Low-stock / out alerts** — derived from `quantity ≤ minThreshold`, never stored. Presented in a dedicated Alerts tab.
+- **Search, filter, sort** — by name, location, category, or urgency (soonest to run out first).
+- **Dark mode** — respects `prefers-color-scheme`, togglable, persisted in localStorage.
+- **PWA** — installable, works offline, auto-updating service worker.
+- **Reset all data** — clear everything from the Alerts tab.
+
+## Architecture
+
+### Prediction Engine
+
+The prediction engine is a replaceable module behind the `PredictionEngine` interface (`src/types/inventory.ts`). The current local implementation (`SimplePredictionEngine` in `src/lib/prediction.ts`) computes an average daily consumption rate from logged consumption events and projects how many days remain until the item reaches zero (or its threshold). To swap in a backend-powered engine, implement the same interface and wire it in — no other code changes needed.
+
+### State
+
+A single Zustand store (`useInventoryStore`) with `persist` middleware writes to `localStorage` key `restoq-inventory`. Everything (items + consumption log) is serialized and restored on page load.
+
+### Data model
+
+- **InventoryItem** — id, name, category, quantity, minThreshold, unit, location, notes, createdAt, updatedAt
+- **ConsumptionEvent** — id, itemId, delta (negative), quantityAfter, timestamp
+
+Low-stock is a derived filter (`quantity <= minThreshold`), never stored.
+
+## Commands
+
+| Command        | Description                                     |
+| -------------- | ----------------------------------------------- |
+| `pnpm dev`     | Vite dev server                                 |
+| `pnpm build`   | `tsc -b && vite build` (type-check then bundle) |
+| `pnpm lint`    | ESLint 10 (flat config)                         |
+| `pnpm format`  | Prettier on `src/**/*.{css,ts,tsx}`             |
+| `pnpm preview` | `vite preview`                                  |
