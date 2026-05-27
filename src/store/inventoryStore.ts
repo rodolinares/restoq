@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { InventoryItem } from '@/types'
+import { SEED_ITEMS } from '@/lib/seed'
 
 function generateId(): string {
   return crypto.randomUUID()
@@ -58,6 +59,14 @@ export const useInventoryStore = create<InventoryStore>()(
 
       lowStockItems: () => get().items.filter(item => item.quantity <= item.minThreshold),
     }),
-    { name: 'restoq-inventory' }
+    {
+      name: 'restoq-inventory',
+      onRehydrateStorage: () => (state, error) => {
+        if (error) return
+        if (import.meta.env.DEV && state && state.items.length === 0) {
+          state.items = SEED_ITEMS.map(item => ({ ...item }))
+        }
+      },
+    }
   )
 )
