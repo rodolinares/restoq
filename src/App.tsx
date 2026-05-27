@@ -5,13 +5,15 @@ import { AppShell } from './components/layout/AppShell'
 import { InventoryView } from './components/inventory/InventoryView'
 import { AlertsView } from './components/alerts/AlertsView'
 import type { TabId } from './components/layout/BottomNav'
+import { useTheme } from './hooks/useTheme'
 
 function App() {
   const [activeTab, setActiveTab] = useState<TabId>('inventory')
+  const { theme, toggle: toggleTheme } = useTheme()
 
   return (
     <AppShell
-      header={<Header />}
+      header={<Header theme={theme} onToggleTheme={toggleTheme} onAlertsClick={() => setActiveTab('alerts')} />}
       nav={<BottomNav activeTab={activeTab} onTabChange={setActiveTab} />}
     >
       {activeTab === 'inventory' ? <InventoryView /> : <AlertsView />}

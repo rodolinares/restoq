@@ -1,7 +1,13 @@
-import { Bell, Package } from 'lucide-react'
+import { Bell, Moon, Package, Sun } from 'lucide-react'
 import { useInventoryStore } from '@/store'
 
-export function Header() {
+interface HeaderProps {
+  theme: 'dark' | 'light'
+  onToggleTheme: () => void
+  onAlertsClick?: () => void
+}
+
+export function Header({ theme, onToggleTheme, onAlertsClick }: HeaderProps) {
   const lowStockCount = useInventoryStore(s =>
     s.items.reduce((acc, item) => (item.quantity <= item.minThreshold ? acc + 1 : acc), 0)
   )
@@ -12,18 +18,31 @@ export function Header() {
         <Package className="size-5 text-primary" />
         <span className="text-lg font-semibold tracking-tight">RestoQ</span>
       </div>
-      <button
-        type="button"
-        className="relative rounded-full p-1.5 text-muted-foreground hover:text-foreground"
-        aria-label="View alerts"
-      >
-        <Bell className="size-5" />
-        {lowStockCount > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground">
-            {lowStockCount}
-          </span>
-        )}
-      </button>
+
+      <div className="flex items-center gap-1">
+        <button
+          type="button"
+          onClick={onToggleTheme}
+          className="rounded-full p-1.5 text-muted-foreground hover:text-foreground"
+          aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+        >
+          {theme === 'dark' ? <Sun className="size-5" /> : <Moon className="size-5" />}
+        </button>
+
+        <button
+          type="button"
+          onClick={onAlertsClick}
+          className="relative rounded-full p-1.5 text-muted-foreground hover:text-foreground"
+          aria-label="View alerts"
+        >
+          <Bell className="size-5" />
+          {lowStockCount > 0 && (
+            <span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground">
+              {lowStockCount}
+            </span>
+          )}
+        </button>
+      </div>
     </header>
   )
 }
