@@ -34,7 +34,7 @@ export function AlertsView() {
               {item.quantity} / {item.minThreshold} {item.unit}
             </p>
           </div>
-          <span className="ml-2 shrink-0 rounded-full bg-destructive px-2.5 py-0.5 text-xs font-medium text-destructive-foreground">
+          <span className={'ml-2 shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ' + (item.quantity === 0 ? 'bg-destructive text-destructive-foreground' : 'badge-low')}>
             {item.quantity === 0 ? 'Out' : 'Low'}
           </span>
         </div>
