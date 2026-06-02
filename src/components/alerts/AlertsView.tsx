@@ -48,6 +48,10 @@ export function AlertsView() {
         <p className="max-w-64 text-sm text-muted-foreground">
           No products are predicted to run out soon.
         </p>
+        <Button variant="outline" size="sm" onClick={generateTestData} className="mt-4">
+          <FlaskConical className="mr-1.5 size-3.5" />
+          Generate test data
+        </Button>
       </div>
     )
   }
@@ -95,13 +99,6 @@ export function AlertsView() {
           </div>
         )
       })}
-
-      <div className="flex justify-center pt-2">
-        <Button variant="outline" size="sm" onClick={generateTestData}>
-          <FlaskConical className="mr-1.5 size-3.5" />
-          Generate test data
-        </Button>
-      </div>
 
       <hr className="my-6 border-border" />
 
