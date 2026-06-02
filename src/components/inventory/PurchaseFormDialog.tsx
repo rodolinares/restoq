@@ -37,7 +37,7 @@ export function PurchaseFormDialog({ open, onOpenChange, existingNames }: Purcha
   const [form, setForm] = useState<FormState>({ ...emptyForm })
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({})
 
-  function validate(): boolean {
+  const validate = (): boolean => {
     const next: typeof errors = {}
     if (!form.name.trim()) next.name = 'Name is required'
     const units = Number(form.units)
@@ -47,7 +47,7 @@ export function PurchaseFormDialog({ open, onOpenChange, existingNames }: Purcha
     return Object.keys(next).length === 0
   }
 
-  function handleSubmit(e: FormEvent) {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
     if (!validate()) return
 
@@ -64,7 +64,7 @@ export function PurchaseFormDialog({ open, onOpenChange, existingNames }: Purcha
     ;(document.activeElement as HTMLElement)?.blur()
   }
 
-  function resetAndClose(open: boolean) {
+  const resetAndClose = (open: boolean) => {
     if (!open) {
       setForm({ ...emptyForm })
       setErrors({})

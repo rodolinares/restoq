@@ -2,16 +2,16 @@ import { useCallback, useEffect, useState } from 'react'
 
 const STORAGE_KEY = 'restoq-theme'
 
-function getSystemPreference(): 'dark' | 'light' {
+const getSystemPreference = (): 'dark' | 'light' => {
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
-function applyTheme(theme: 'dark' | 'light') {
+const applyTheme = (theme: 'dark' | 'light') => {
   document.documentElement.classList.toggle('dark', theme === 'dark')
   localStorage.setItem(STORAGE_KEY, theme)
 }
 
-function getInitialTheme(): 'dark' | 'light' {
+const getInitialTheme = (): 'dark' | 'light' => {
   const stored = localStorage.getItem(STORAGE_KEY)
   if (stored === 'dark' || stored === 'light') return stored
   return getSystemPreference()

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { purchaseEngine } from '../prediction.ts'
 import type { PurchaseRecord } from '@/types'
 
-function record(overrides: Partial<PurchaseRecord> = {}): PurchaseRecord {
+const record = (overrides: Partial<PurchaseRecord> = {}): PurchaseRecord => {
   return {
     id: '1',
     name: 'Test Product',

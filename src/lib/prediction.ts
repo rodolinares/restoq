@@ -2,7 +2,7 @@ import type { PredictionEngine } from '@/types'
 
 const MS_PER_DAY = 86_400_000
 
-function toDate(s: string): Date {
+const toDate = (s: string): Date => {
   return new Date(s + 'T00:00:00')
 }
 

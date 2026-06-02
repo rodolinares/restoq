@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware'
 import type { PurchaseRecord } from '@/types'
 import { getTestPurchases } from '@/lib/testData'
 
-function generateId(): string {
+const generateId = (): string => {
   return crypto.randomUUID()
 }
 

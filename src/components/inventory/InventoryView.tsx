@@ -9,9 +9,9 @@ import { Input } from '@/components/ui/input'
 import { PurchaseFormDialog } from './PurchaseFormDialog'
 import { ConfirmDeleteDialog } from './ConfirmDeleteDialog'
 
-function groupByProduct(
+const groupByProduct = (
   purchases: PurchaseRecord[]
-): { name: string; records: PurchaseRecord[]; prediction: ProductPrediction | null }[] {
+): { name: string; records: PurchaseRecord[]; prediction: ProductPrediction | null }[] => {
   const map = new Map<string, PurchaseRecord[]>()
   for (const p of purchases) {
     const list = map.get(p.name) ?? []
@@ -42,7 +42,7 @@ export function InventoryView() {
     return all.filter(g => g.name.toLowerCase().includes(q))
   }, [purchases, search])
 
-  function handleDelete(record: PurchaseRecord) {
+  const handleDelete = (record: PurchaseRecord) => {
     removePurchase(record.id)
     setDeletingPurchase(undefined)
     toast('Purchase removed', { icon: <Trash2 className="size-4" /> })
@@ -128,7 +128,7 @@ interface ProductGroupProps {
   onDeleteRecord: (record: PurchaseRecord) => void
 }
 
-function ProductGroup({ group, onDeleteRecord }: ProductGroupProps) {
+const ProductGroup = ({ group, onDeleteRecord }: ProductGroupProps) => {
   const pred = group.prediction
   const isExpired = pred?.daysUntilEmpty !== null && pred?.daysUntilEmpty !== undefined && pred.daysUntilEmpty <= 0
 

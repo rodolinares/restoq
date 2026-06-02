@@ -8,7 +8,7 @@ import { AlertsView } from './components/alerts/AlertsView'
 import type { TabId } from './components/layout/BottomNav'
 import { useTheme } from './hooks/useTheme'
 
-function App() {
+const App = () => {
   const [activeTab, setActiveTab] = useState<TabId>('inventory')
   const { theme, toggle: toggleTheme } = useTheme()
 
