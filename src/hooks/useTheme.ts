@@ -1,26 +1,13 @@
-import { useCallback, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 const STORAGE_KEY = 'restoq-theme'
 
 function getSystemPreference(): 'dark' | 'light' {
-  if (typeof window === 'undefined') return 'light'
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
-function getSnapshot(): 'dark' | 'light' {
-  if (typeof document === 'undefined') return 'light'
-  return document.documentElement.classList.contains('dark') ? 'dark' : 'light'
-}
-
-function subscribe(callback: () => void) {
-  const mql = window.matchMedia('(prefers-color-scheme: dark)')
-  mql.addEventListener('change', callback)
-  return () => mql.removeEventListener('change', callback)
-}
-
 function applyTheme(theme: 'dark' | 'light') {
-  const root = document.documentElement
-  root.classList.toggle('dark', theme === 'dark')
+  document.documentElement.classList.toggle('dark', theme === 'dark')
   localStorage.setItem(STORAGE_KEY, theme)
 }
 
@@ -34,10 +21,26 @@ function getInitialTheme(): 'dark' | 'light' {
 applyTheme(getInitialTheme())
 
 export function useTheme() {
-  const theme = useSyncExternalStore(subscribe, getSnapshot)
+  const [theme, setTheme] = useState<'dark' | 'light'>(getInitialTheme)
+
+  useEffect(() => {
+    const mql = window.matchMedia('(prefers-color-scheme: dark)')
+    const handler = () => {
+      const stored = localStorage.getItem(STORAGE_KEY)
+      if (stored !== 'dark' && stored !== 'light') {
+        const sys = mql.matches ? 'dark' : 'light'
+        applyTheme(sys)
+        setTheme(sys)
+      }
+    }
+    mql.addEventListener('change', handler)
+    return () => mql.removeEventListener('change', handler)
+  }, [])
 
   const toggle = useCallback(() => {
-    applyTheme(theme === 'dark' ? 'light' : 'dark')
+    const next = theme === 'dark' ? 'light' : 'dark'
+    applyTheme(next)
+    setTheme(next)
   }, [theme])
 
   return { theme, toggle }
