@@ -1,5 +1,7 @@
+import { useMemo } from 'react'
 import { Bell, Moon, Package, Sun } from 'lucide-react'
-import { useInventoryStore } from '@/store'
+import { usePurchaseStore } from '@/store'
+import { purchaseEngine } from '@/lib/prediction'
 
 interface HeaderProps {
   theme: 'dark' | 'light'
@@ -8,9 +10,36 @@ interface HeaderProps {
 }
 
 export function Header({ theme, onToggleTheme, onAlertsClick }: HeaderProps) {
-  const lowStockCount = useInventoryStore(s =>
-    s.items.reduce((acc, item) => (item.quantity <= item.minThreshold ? acc + 1 : acc), 0)
-  )
+  const purchases = usePurchaseStore(s => s.purchases)
+
+  const alertCount = useMemo(() => {
+    const map = new Map<string, { units: number; date: string }[]>()
+    for (const p of purchases) {
+      const list = map.get(p.name) ?? []
+      list.push({ units: p.units, date: p.purchaseDate })
+      map.set(p.name, list)
+    }
+
+    let count = 0
+    for (const records of map.values()) {
+      const pred = purchaseEngine.predict(
+        records.map(r => ({
+          id: '',
+          name: '',
+          units: r.units,
+          purchaseDate: r.date
+        }))
+      )
+      if (
+        pred &&
+        pred.daysUntilEmpty !== null &&
+        pred.daysUntilEmpty <= 7
+      ) {
+        count++
+      }
+    }
+    return count
+  }, [purchases])
 
   return (
     <header className="flex items-center justify-between border-b border-border bg-background px-4 py-3">
@@ -36,9 +65,9 @@ export function Header({ theme, onToggleTheme, onAlertsClick }: HeaderProps) {
           aria-label="View alerts"
         >
           <Bell className="size-5" />
-          {lowStockCount > 0 && (
+          {alertCount > 0 && (
             <span className="absolute right-0 top-0 flex size-4 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-white">
-              {lowStockCount}
+              {alertCount}
             </span>
           )}
         </button>

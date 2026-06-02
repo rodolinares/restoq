@@ -1,8 +1,1 @@
-export type {
-  InventoryItem,
-  Location,
-  Unit,
-  ConsumptionEvent,
-  ItemPrediction,
-  PredictionEngine
-} from './inventory.ts'
+export type { PurchaseRecord, ProductPrediction, PredictionEngine } from './inventory.ts'

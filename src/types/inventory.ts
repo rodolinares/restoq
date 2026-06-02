@@ -1,39 +1,20 @@
-export type Unit = 'pcs' | 'kg' | 'g' | 'l' | 'ml' | 'tbsp' | 'tsp' | 'cup' | 'oz' | 'lb'
-
-export type Location = 'pantry' | 'fridge' | 'freezer' | 'bathroom' | 'cleaning' | 'other'
-
-export interface InventoryItem {
+export interface PurchaseRecord {
   id: string
   name: string
-  category: string
-  quantity: number
-  minThreshold: number
-  unit: Unit
-  location: Location
-  notes?: string
-  imageUrl?: string
-  createdAt: number
-  updatedAt: number
+  units: number
+  purchaseDate: string
 }
 
-export interface ConsumptionEvent {
-  id: string
-  itemId: string
-  delta: number
-  quantityAfter: number
-  timestamp: number
-}
-
-export interface ItemPrediction {
+export interface ProductPrediction {
+  name: string
+  dailyUsage: number | null
   daysUntilEmpty: number | null
-  daysUntilThreshold: number | null
+  estimatedCurrentStock: number
+  lastPurchaseDate: string | null
+  lastPurchaseUnits: number | null
   confidence: 'low' | 'medium' | 'high'
 }
 
 export interface PredictionEngine {
-  predict: (
-    quantity: number,
-    minThreshold: number,
-    history: ConsumptionEvent[]
-  ) => ItemPrediction | null
+  predict: (records: PurchaseRecord[]) => ProductPrediction | null
 }

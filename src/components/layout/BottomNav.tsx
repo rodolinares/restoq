@@ -1,5 +1,7 @@
+import { useMemo } from 'react'
 import { Bell, Package } from 'lucide-react'
-import { useInventoryStore } from '@/store'
+import { usePurchaseStore } from '@/store'
+import { purchaseEngine } from '@/lib/prediction'
 
 export type TabId = 'inventory' | 'alerts'
 
@@ -14,9 +16,36 @@ const tabs: { id: TabId; label: string; icon: typeof Package }[] = [
 ]
 
 export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
-  const lowStockCount = useInventoryStore(s =>
-    s.items.reduce((acc, item) => (item.quantity <= item.minThreshold ? acc + 1 : acc), 0)
-  )
+  const purchases = usePurchaseStore(s => s.purchases)
+
+  const alertCount = useMemo(() => {
+    const map = new Map<string, { units: number; date: string }[]>()
+    for (const p of purchases) {
+      const list = map.get(p.name) ?? []
+      list.push({ units: p.units, date: p.purchaseDate })
+      map.set(p.name, list)
+    }
+
+    let count = 0
+    for (const records of map.values()) {
+      const pred = purchaseEngine.predict(
+        records.map(r => ({
+          id: '',
+          name: '',
+          units: r.units,
+          purchaseDate: r.date
+        }))
+      )
+      if (
+        pred &&
+        pred.daysUntilEmpty !== null &&
+        pred.daysUntilEmpty <= 7
+      ) {
+        count++
+      }
+    }
+    return count
+  }, [purchases])
 
   return (
     <nav className="flex border-t border-border bg-background pb-[env(safe-area-inset-bottom,0px)]">
@@ -32,9 +61,9 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
         >
           <Icon className="size-5" />
           <span>{label}</span>
-          {id === 'alerts' && lowStockCount > 0 && (
+          {id === 'alerts' && alertCount > 0 && (
             <span className="absolute right-21 top-1 flex size-4 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-white">
-              {lowStockCount}
+              {alertCount}
             </span>
           )}
         </button>

@@ -16,13 +16,15 @@
 ```sh
 pnpm dev         # Vite dev server
 pnpm build       # tsc -b && vite build (type-check then bundle)
+pnpm test        # vitest run
+pnpm test:watch  # vitest (watch mode)
 pnpm lint        # eslint .  (flat config, ESLint 10)
 pnpm format      # prettier src/**/*.{css,ts,tsx} --write
 pnpm preview     # vite preview
 ```
 
 - Build **always runs `tsc -b` first** — type errors block bundling. Run `pnpm lint` before committing.
-- No test framework or test script configured yet.
+- Tests run with vitest. Run `pnpm test` before pushing.
 
 ## Code Conventions
 
@@ -37,5 +39,6 @@ pnpm preview     # vite preview
 
 - **Single-page app**, no router yet.
 - Front-end only, all state persisted locally (no backend, no auth, no network dependency).
-- **Prediction engine** must be a replaceable module behind an interface for future backend handoff.
-- Service calls should be abstracted behind an interface now.
+- **Prediction engine** (`PredictionEngine` interface in `src/types/inventory.ts`) is a replaceable module for future backend handoff.
+- **Data model**: `PurchaseRecord` (name, units, purchaseDate) stored in Zustand with `persist` middleware → `localStorage`.
+- **Prediction**: `purchaseEngine` in `src/lib/prediction.ts` derives consumption rate from purchase history to estimate current stock and days until empty. Grouped by product name in components.

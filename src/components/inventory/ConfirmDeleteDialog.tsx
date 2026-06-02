@@ -11,6 +11,7 @@ interface ConfirmDeleteDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   itemName: string
+  detail?: string
   onConfirm: () => void
 }
 
@@ -18,16 +19,18 @@ export function ConfirmDeleteDialog({
   open,
   onOpenChange,
   itemName,
+  detail,
   onConfirm
 }: ConfirmDeleteDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Delete {itemName}?</DialogTitle>
+          <DialogTitle>Remove record?</DialogTitle>
         </DialogHeader>
         <p className="text-sm text-muted-foreground">
-          This action cannot be undone. The item will be permanently removed from your inventory.
+          This will remove <strong>{itemName}</strong>
+          {detail ? <> ({detail})</> : ''} from your purchase history.
         </p>
         <div className="flex gap-3 pt-2">
           <DialogClose asChild>
@@ -36,7 +39,7 @@ export function ConfirmDeleteDialog({
             </Button>
           </DialogClose>
           <Button type="button" variant="destructive" className="flex-1" onClick={onConfirm}>
-            Delete
+            Remove
           </Button>
         </div>
       </DialogContent>

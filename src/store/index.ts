@@ -1,2 +1,2 @@
-export { useInventoryStore } from './inventoryStore.ts'
-export type { InventoryStore } from './inventoryStore.ts'
+export { usePurchaseStore } from './inventoryStore.ts'
+export type { PurchaseStore } from './inventoryStore.ts'

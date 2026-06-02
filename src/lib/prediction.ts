@@ -1,36 +1,75 @@
-import type { ConsumptionEvent, ItemPrediction, PredictionEngine } from '@/types'
+import type { PredictionEngine } from '@/types'
 
 const MS_PER_DAY = 86_400_000
 
-function avgDailyRate(history: ConsumptionEvent[]): number | null {
-  if (history.length === 0) return null
-
-  const totalConsumed = history.reduce((sum, e) => sum + Math.abs(e.delta), 0)
-  const firstTs = Math.min(...history.map(e => e.timestamp))
-  const lastTs = Math.max(...history.map(e => e.timestamp))
-  const spanDays = Math.max((lastTs - firstTs) / MS_PER_DAY, 1)
-
-  return totalConsumed / spanDays
+function toDate(s: string): Date {
+  return new Date(s + 'T00:00:00')
 }
 
-function confidenceLevel(count: number): ItemPrediction['confidence'] {
-  if (count <= 1) return 'low'
-  if (count <= 4) return 'medium'
-  return 'high'
-}
+export const purchaseEngine: PredictionEngine = {
+  predict(records) {
+    if (records.length === 0) return null
 
-export const simpleEngine: PredictionEngine = {
-  predict(quantity, minThreshold, history) {
-    const rate = avgDailyRate(history)
-    if (rate === null || rate <= 0) return null
+    const sorted = [...records].sort(
+      (a, b) => a.purchaseDate.localeCompare(b.purchaseDate)
+    )
+    const totalUnits = records.reduce((sum, r) => sum + r.units, 0)
 
-    const daysUntilEmpty = quantity / rate
-    const daysUntilThreshold = (quantity - minThreshold) / rate
+    if (records.length === 1) {
+      const r = records[0]
+      return {
+        name: r.name,
+        dailyUsage: null,
+        daysUntilEmpty: null,
+        estimatedCurrentStock: r.units,
+        lastPurchaseDate: r.purchaseDate,
+        lastPurchaseUnits: r.units,
+        confidence: 'low'
+      }
+    }
+
+    const firstDate = toDate(sorted[0].purchaseDate)
+    const lastDate = toDate(sorted[sorted.length - 1].purchaseDate)
+    const daysSpan = Math.max(
+      (lastDate.getTime() - firstDate.getTime()) / MS_PER_DAY,
+      1
+    )
+
+    const dailyRate = totalUnits / daysSpan
+
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const daysSinceLastPurchase = Math.max(
+      (today.getTime() - lastDate.getTime()) / MS_PER_DAY,
+      0
+    )
+
+    const lastRecord = sorted[sorted.length - 1]
+    const estimatedCurrentStock = Math.max(
+      0,
+      lastRecord.units - daysSinceLastPurchase * dailyRate
+    )
+    const daysUntilEmpty =
+      dailyRate > 0 ? estimatedCurrentStock / dailyRate : null
+
+    const confidence =
+      records.length <= 2
+        ? 'low'
+        : records.length <= 5
+          ? 'medium'
+          : 'high'
 
     return {
-      daysUntilEmpty: Math.round(daysUntilEmpty * 10) / 10,
-      daysUntilThreshold: Math.round(daysUntilThreshold * 10) / 10,
-      confidence: confidenceLevel(history.length)
+      name: lastRecord.name,
+      dailyUsage: Math.round(dailyRate * 100) / 100,
+      daysUntilEmpty:
+        daysUntilEmpty !== null
+          ? Math.round(daysUntilEmpty * 10) / 10
+          : null,
+      estimatedCurrentStock: Math.round(estimatedCurrentStock * 10) / 10,
+      lastPurchaseDate: lastRecord.purchaseDate,
+      lastPurchaseUnits: lastRecord.units,
+      confidence
     }
   }
 }

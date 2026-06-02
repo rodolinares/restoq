@@ -1,83 +1,42 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { InventoryItem, ConsumptionEvent } from '@/types'
+import type { PurchaseRecord } from '@/types'
 
 function generateId(): string {
   return crypto.randomUUID()
 }
 
-export interface InventoryStore {
-  items: InventoryItem[]
-  consumptionLog: ConsumptionEvent[]
-  addItem: (item: Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt'>) => void
-  updateItem: (
-    id: string,
-    updates: Partial<Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt'>>
-  ) => void
-  removeItem: (id: string) => void
-  adjustQuantity: (id: string, delta: number) => void
-  lowStockItems: () => InventoryItem[]
+export interface PurchaseStore {
+  purchases: PurchaseRecord[]
+  addPurchase: (purchase: Omit<PurchaseRecord, 'id'>) => void
+  removePurchase: (id: string) => void
   resetAll: () => void
 }
 
-export const useInventoryStore = create<InventoryStore>()(
+export const usePurchaseStore = create<PurchaseStore>()(
   persist(
-    (set, get) => ({
-      items: [],
-      consumptionLog: [],
+    set => ({
+      purchases: [],
 
-      addItem: item =>
+      addPurchase: purchase =>
         set(state => ({
-          items: [
-            ...state.items,
-            {
-              ...item,
-              id: generateId(),
-              createdAt: Date.now(),
-              updatedAt: Date.now()
-            }
+          purchases: [
+            ...state.purchases,
+            { ...purchase, id: generateId() }
           ]
         })),
 
-      updateItem: (id, updates) =>
+      removePurchase: id =>
         set(state => ({
-          items: state.items.map(item =>
-            item.id === id ? { ...item, ...updates, updatedAt: Date.now() } : item
-          )
+          purchases: state.purchases.filter(p => p.id !== id)
         })),
-
-      removeItem: id =>
-        set(state => ({
-          items: state.items.filter(item => item.id !== id)
-        })),
-
-      adjustQuantity: (id, delta) =>
-        set(state => {
-          const items = state.items.map(item =>
-            item.id === id
-              ? { ...item, quantity: item.quantity + delta, updatedAt: Date.now() }
-              : item
-          )
-          if (delta >= 0) return { items }
-          const updatedItem = items.find(i => i.id === id)!
-          const event: ConsumptionEvent = {
-            id: generateId(),
-            itemId: id,
-            delta,
-            quantityAfter: updatedItem.quantity,
-            timestamp: Date.now()
-          }
-          return { items, consumptionLog: [...state.consumptionLog, event] }
-        }),
-
-      lowStockItems: () => get().items.filter(item => item.quantity <= item.minThreshold),
 
       resetAll: () => {
-        set({ items: [], consumptionLog: [] })
+        set({ purchases: [] })
       }
     }),
     {
-      name: 'restoq-inventory'
+      name: 'restoq-purchases'
     }
   )
 )
