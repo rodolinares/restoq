@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { BellOff, RotateCcw } from 'lucide-react'
+import { BellOff, FlaskConical, RotateCcw } from 'lucide-react'
 import { usePurchaseStore } from '@/store'
 import { purchaseEngine } from '@/lib/prediction'
 import type { ProductPrediction } from '@/types'
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 export function AlertsView() {
   const purchases = usePurchaseStore(s => s.purchases)
   const resetAll = usePurchaseStore(s => s.resetAll)
+  const generateTestData = usePurchaseStore(s => s.generateTestData)
 
   const alerts = useMemo(() => {
     const map = new Map<string, { records: typeof purchases; prediction: ProductPrediction | null }>()
@@ -94,6 +95,13 @@ export function AlertsView() {
           </div>
         )
       })}
+
+      <div className="flex justify-center pt-2">
+        <Button variant="outline" size="sm" onClick={generateTestData}>
+          <FlaskConical className="mr-1.5 size-3.5" />
+          Generate test data
+        </Button>
+      </div>
 
       <hr className="my-6 border-border" />
 
