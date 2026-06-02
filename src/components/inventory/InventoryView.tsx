@@ -21,9 +21,7 @@ function groupByProduct(
   return Array.from(map.entries())
     .map(([name, records]) => ({
       name,
-      records: records.sort(
-        (a, b) => b.purchaseDate.localeCompare(a.purchaseDate)
-      ),
+      records: records.sort((a, b) => b.purchaseDate.localeCompare(a.purchaseDate)),
       prediction: purchaseEngine.predict(records)
     }))
     .sort((a, b) => a.name.localeCompare(b.name))
@@ -35,9 +33,7 @@ export function InventoryView() {
 
   const [search, setSearch] = useState('')
   const [showForm, setShowForm] = useState(false)
-  const [deletingPurchase, setDeletingPurchase] = useState<
-    PurchaseRecord | undefined
-  >(undefined)
+  const [deletingPurchase, setDeletingPurchase] = useState<PurchaseRecord | undefined>(undefined)
 
   const groups = useMemo(() => {
     const all = groupByProduct(purchases)
@@ -58,9 +54,7 @@ export function InventoryView() {
         <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">
           <PackageOpen className="size-12 text-muted-foreground" />
           <h2 className="text-lg font-semibold">No purchases yet</h2>
-          <p className="max-w-64 text-sm text-muted-foreground">
-            Tap the + button to record your first purchase.
-          </p>
+          <p className="max-w-64 text-sm text-muted-foreground">Tap the + button to record your first purchase.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -92,11 +86,7 @@ export function InventoryView() {
           ) : (
             <div className="space-y-4">
               {groups.map(group => (
-                <ProductGroup
-                  key={group.name}
-                  group={group}
-                  onDeleteRecord={setDeletingPurchase}
-                />
+                <ProductGroup key={group.name} group={group} onDeleteRecord={setDeletingPurchase} />
               ))}
             </div>
           )}
@@ -122,11 +112,7 @@ export function InventoryView() {
         open={!!deletingPurchase}
         onOpenChange={open => !open && setDeletingPurchase(undefined)}
         itemName={deletingPurchase?.name ?? ''}
-        detail={
-          deletingPurchase
-            ? `${deletingPurchase.units} units on ${deletingPurchase.purchaseDate}`
-            : ''
-        }
+        detail={deletingPurchase ? `${deletingPurchase.units} units on ${deletingPurchase.purchaseDate}` : ''}
         onConfirm={() => deletingPurchase && handleDelete(deletingPurchase)}
       />
     </>
@@ -144,10 +130,7 @@ interface ProductGroupProps {
 
 function ProductGroup({ group, onDeleteRecord }: ProductGroupProps) {
   const pred = group.prediction
-  const isExpired =
-    pred?.daysUntilEmpty !== null &&
-    pred?.daysUntilEmpty !== undefined &&
-    pred.daysUntilEmpty <= 0
+  const isExpired = pred?.daysUntilEmpty !== null && pred?.daysUntilEmpty !== undefined && pred.daysUntilEmpty <= 0
 
   const isLow =
     pred?.daysUntilEmpty !== null &&
@@ -178,20 +161,15 @@ function ProductGroup({ group, onDeleteRecord }: ProductGroupProps) {
               </span>
               {pred.daysUntilEmpty !== null && (
                 <span>
-                  &middot; ~{Math.round(pred.daysUntilEmpty)}{' '}
-                  {Math.round(pred.daysUntilEmpty) === 1 ? 'day' : 'days'}
+                  &middot; ~{Math.round(pred.daysUntilEmpty)} {Math.round(pred.daysUntilEmpty) === 1 ? 'day' : 'days'}
                 </span>
               )}
-              {pred.confidence === 'low' && (
-                <span className="text-muted-foreground/60">(estimate)</span>
-              )}
+              {pred.confidence === 'low' && <span className="text-muted-foreground/60">(estimate)</span>}
               {pred.confidence === 'high' && (
                 <span className="text-emerald-600 dark:text-emerald-400">(high confidence)</span>
               )}
               {pred.dailyUsage !== null && (
-                <span className="text-muted-foreground/60">
-                  &middot; {pred.dailyUsage}/day
-                </span>
+                <span className="text-muted-foreground/60">&middot; {pred.dailyUsage}/day</span>
               )}
             </div>
           )}
@@ -210,10 +188,7 @@ function ProductGroup({ group, onDeleteRecord }: ProductGroupProps) {
 
       <div className="divide-y divide-border">
         {group.records.map(record => (
-          <div
-            key={record.id}
-            className="flex items-center justify-between px-3 py-2"
-          >
+          <div key={record.id} className="flex items-center justify-between px-3 py-2">
             <div className="flex items-center gap-2 text-sm">
               <Clock className="size-3.5 text-muted-foreground" />
               <span>{record.purchaseDate}</span>

@@ -15,13 +15,7 @@ function App() {
   return (
     <>
       <AppShell
-        header={
-          <Header
-            theme={theme}
-            onToggleTheme={toggleTheme}
-            onAlertsClick={() => setActiveTab('alerts')}
-          />
-        }
+        header={<Header theme={theme} onToggleTheme={toggleTheme} onAlertsClick={() => setActiveTab('alerts')} />}
         nav={<BottomNav activeTab={activeTab} onTabChange={setActiveTab} />}
       >
         {activeTab === 'inventory' ? <InventoryView /> : <AlertsView />}

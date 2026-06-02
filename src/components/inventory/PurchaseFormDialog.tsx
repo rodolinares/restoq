@@ -1,13 +1,7 @@
 import { useState, useRef, useEffect, type FormEvent } from 'react'
 import { toast } from 'sonner'
 import { usePurchaseStore } from '@/store'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogClose
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -30,11 +24,7 @@ const emptyForm: FormState = {
   purchaseDate: new Date().toISOString().slice(0, 10)
 }
 
-export function PurchaseFormDialog({
-  open,
-  onOpenChange,
-  existingNames
-}: PurchaseFormDialogProps) {
+export function PurchaseFormDialog({ open, onOpenChange, existingNames }: PurchaseFormDialogProps) {
   const addPurchase = usePurchaseStore(s => s.addPurchase)
   const nameRef = useRef<HTMLInputElement>(null)
 
@@ -51,8 +41,7 @@ export function PurchaseFormDialog({
     const next: typeof errors = {}
     if (!form.name.trim()) next.name = 'Name is required'
     const units = Number(form.units)
-    if (!Number.isFinite(units) || units <= 0 || !Number.isInteger(units))
-      next.units = 'Must be a whole number > 0'
+    if (!Number.isFinite(units) || units <= 0 || !Number.isInteger(units)) next.units = 'Must be a whole number > 0'
     if (!form.purchaseDate) next.purchaseDate = 'Date is required'
     setErrors(next)
     return Object.keys(next).length === 0
@@ -134,9 +123,7 @@ export function PurchaseFormDialog({
               onChange={e => setForm(f => ({ ...f, purchaseDate: e.target.value }))}
               aria-invalid={!!errors.purchaseDate}
             />
-            {errors.purchaseDate && (
-              <p className="text-xs text-destructive">{errors.purchaseDate}</p>
-            )}
+            {errors.purchaseDate && <p className="text-xs text-destructive">{errors.purchaseDate}</p>}
           </div>
 
           <div className="flex gap-3 pt-2 pb-4">

@@ -22,10 +22,7 @@ export const usePurchaseStore = create<PurchaseStore>()(
 
       addPurchase: purchase =>
         set(state => ({
-          purchases: [
-            ...state.purchases,
-            { ...purchase, id: generateId() }
-          ]
+          purchases: [...state.purchases, { ...purchase, id: generateId() }]
         })),
 
       removePurchase: id =>
@@ -39,10 +36,7 @@ export const usePurchaseStore = create<PurchaseStore>()(
 
       generateTestData: () => {
         set(state => ({
-          purchases: [
-            ...state.purchases,
-            ...getTestPurchases().map(p => ({ ...p, id: generateId() }))
-          ]
+          purchases: [...state.purchases, ...getTestPurchases().map(p => ({ ...p, id: generateId() }))]
         }))
       }
     }),

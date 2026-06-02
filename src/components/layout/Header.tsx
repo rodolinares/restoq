@@ -30,11 +30,7 @@ export function Header({ theme, onToggleTheme, onAlertsClick }: HeaderProps) {
           purchaseDate: r.date
         }))
       )
-      if (
-        pred &&
-        pred.daysUntilEmpty !== null &&
-        pred.daysUntilEmpty <= 7
-      ) {
+      if (pred && pred.daysUntilEmpty !== null && pred.daysUntilEmpty <= 7) {
         count++
       }
     }

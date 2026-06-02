@@ -1,10 +1,4 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogClose
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 
 interface ConfirmDeleteDialogProps {
@@ -15,13 +9,7 @@ interface ConfirmDeleteDialogProps {
   onConfirm: () => void
 }
 
-export function ConfirmDeleteDialog({
-  open,
-  onOpenChange,
-  itemName,
-  detail,
-  onConfirm
-}: ConfirmDeleteDialogProps) {
+export function ConfirmDeleteDialog({ open, onOpenChange, itemName, detail, onConfirm }: ConfirmDeleteDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>

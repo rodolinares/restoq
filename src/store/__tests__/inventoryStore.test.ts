@@ -72,9 +72,7 @@ describe('usePurchaseStore', () => {
     })
 
     expect(usePurchaseStore.getState().purchases).toHaveLength(3)
-    const coffee = usePurchaseStore.getState().purchases.filter(
-      p => p.name === 'Coffee'
-    )
+    const coffee = usePurchaseStore.getState().purchases.filter(p => p.name === 'Coffee')
     expect(coffee).toHaveLength(3)
   })
 })

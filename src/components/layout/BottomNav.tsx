@@ -36,11 +36,7 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
           purchaseDate: r.date
         }))
       )
-      if (
-        pred &&
-        pred.daysUntilEmpty !== null &&
-        pred.daysUntilEmpty <= 7
-      ) {
+      if (pred && pred.daysUntilEmpty !== null && pred.daysUntilEmpty <= 7) {
         count++
       }
     }

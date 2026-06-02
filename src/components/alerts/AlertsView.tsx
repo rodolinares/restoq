@@ -24,18 +24,12 @@ export function AlertsView() {
     const result: { name: string; prediction: ProductPrediction }[] = []
     for (const [name, { records }] of map) {
       const pred = purchaseEngine.predict(records)
-      if (
-        pred &&
-        pred.daysUntilEmpty !== null &&
-        pred.daysUntilEmpty <= 7
-      ) {
+      if (pred && pred.daysUntilEmpty !== null && pred.daysUntilEmpty <= 7) {
         result.push({ name, prediction: pred })
       }
     }
 
-    return result.sort(
-      (a, b) => (a.prediction.daysUntilEmpty ?? Infinity) - (b.prediction.daysUntilEmpty ?? Infinity)
-    )
+    return result.sort((a, b) => (a.prediction.daysUntilEmpty ?? Infinity) - (b.prediction.daysUntilEmpty ?? Infinity))
   }, [purchases])
 
   const [confirmReset, setConfirmReset] = useState(false)
@@ -45,9 +39,7 @@ export function AlertsView() {
       <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">
         <BellOff className="size-12 text-muted-foreground" />
         <h2 className="text-lg font-semibold">All stocked up</h2>
-        <p className="max-w-64 text-sm text-muted-foreground">
-          No products are predicted to run out soon.
-        </p>
+        <p className="max-w-64 text-sm text-muted-foreground">No products are predicted to run out soon.</p>
         <Button variant="outline" size="sm" onClick={generateTestData} className="mt-4">
           <FlaskConical className="mr-1.5 size-3.5" />
           Generate test data
@@ -67,18 +59,9 @@ export function AlertsView() {
           >
             <div className="min-w-0 flex-1">
               <p className="truncate font-medium">{name}</p>
-              <p className="text-sm text-muted-foreground">
-                Est. stock: {prediction.estimatedCurrentStock}
-              </p>
+              <p className="text-sm text-muted-foreground">Est. stock: {prediction.estimatedCurrentStock}</p>
               {prediction.daysUntilEmpty !== null && (
-                <p
-                  className={
-                    'mt-0.5 text-xs ' +
-                    (isOut
-                      ? 'text-destructive'
-                      : 'text-amber-600 dark:text-amber-400')
-                  }
-                >
+                <p className={'mt-0.5 text-xs ' + (isOut ? 'text-destructive' : 'text-amber-600 dark:text-amber-400')}>
                   {isOut
                     ? 'Overdue for restock'
                     : `~${Math.round(prediction.daysUntilEmpty)} day${Math.round(prediction.daysUntilEmpty) === 1 ? '' : 's'}`}
