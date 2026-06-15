@@ -1,4 +1,5 @@
 import { predictConsumption } from '@/lib/prediction'
+import type { Depletion } from '@/types/inventory'
 
 export interface AlertItem {
   name: string
@@ -77,7 +78,10 @@ export async function sendAlertNotification(alerts: AlertItem[]): Promise<void> 
   }
 }
 
-export function computeAlerts(purchases: Array<{ name: string; units: number; purchaseDate: string }>): AlertItem[] {
+export function computeAlerts(
+  purchases: Array<{ name: string; units: number; purchaseDate: string }>,
+  depletions: Depletion[] = []
+): AlertItem[] {
   const map = new Map<string, Array<{ name: string; units: number; purchaseDate: string }>>()
   for (const p of purchases) {
     const list = map.get(p.name) ?? []
@@ -89,7 +93,7 @@ export function computeAlerts(purchases: Array<{ name: string; units: number; pu
 
   for (const [name, records] of map) {
     if (records.length <= 1) continue
-    const pred = predictConsumption(records)
+    const pred = predictConsumption(records, depletions)
     if (pred && pred.daysUntilEmpty !== null && pred.daysUntilEmpty <= 7) {
       alerts.push({
         name,

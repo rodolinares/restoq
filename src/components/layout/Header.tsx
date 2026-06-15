@@ -11,8 +11,9 @@ interface HeaderProps {
 
 export function Header({ theme, onToggleTheme, onAlertsClick }: HeaderProps) {
   const purchases = usePurchaseStore(s => s.purchases)
+  const depletions = usePurchaseStore(s => s.depletions)
 
-  const alertCount = useMemo(() => computeAlertCount(purchases), [purchases])
+  const alertCount = useMemo(() => computeAlertCount(purchases, depletions), [purchases, depletions])
 
   return (
     <header className="flex items-center justify-between border-b border-border bg-background px-4 py-3">

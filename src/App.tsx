@@ -14,7 +14,8 @@ const App = () => {
   const [activeTab, setActiveTab] = useState<TabId>('inventory')
   const { theme, toggle: toggleTheme } = useTheme()
   const purchases = usePurchaseStore(s => s.purchases)
-  useNotifications(purchases)
+  const depletions = usePurchaseStore(s => s.depletions)
+  useNotifications(purchases, depletions)
 
   return (
     <>

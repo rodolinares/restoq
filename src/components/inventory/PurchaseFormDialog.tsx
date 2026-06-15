@@ -56,7 +56,7 @@ export function PurchaseFormDialog({ open, onOpenChange, existingNames }: Purcha
       units: Number(form.units),
       purchaseDate: form.purchaseDate
     })
-    toast(`${form.name.trim()} added`)
+    toast(`${form.name.trim()} added`, { duration: 3000 })
 
     onOpenChange(false)
     setForm({ ...emptyForm })

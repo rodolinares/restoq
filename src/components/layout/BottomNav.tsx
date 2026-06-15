@@ -17,8 +17,9 @@ const tabs: { id: TabId; label: string; icon: typeof Package }[] = [
 
 export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
   const purchases = usePurchaseStore(s => s.purchases)
+  const depletions = usePurchaseStore(s => s.depletions)
 
-  const alertCount = useMemo(() => computeAlertCount(purchases), [purchases])
+  const alertCount = useMemo(() => computeAlertCount(purchases, depletions), [purchases, depletions])
 
   return (
     <nav className="flex border-t border-border bg-background pb-[env(safe-area-inset-bottom,0px)]">

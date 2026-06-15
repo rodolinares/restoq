@@ -5,6 +5,11 @@ export interface PurchaseRecord {
   purchaseDate: string
 }
 
+export interface Depletion {
+  productName: string
+  depletedAt: string
+}
+
 export interface ProductPrediction {
   name: string
   dailyUsage: number | null

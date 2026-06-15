@@ -6,18 +6,18 @@ import {
   sendAlertNotification,
   computeAlerts
 } from '@/lib/notifications'
-import type { PurchaseRecord } from '@/types/inventory'
+import type { PurchaseRecord, Depletion } from '@/types/inventory'
 
 const STORAGE_KEY = 'restoq-notified-alerts'
 
-export function useNotifications(purchases: PurchaseRecord[]) {
+export function useNotifications(purchases: PurchaseRecord[], depletions: Depletion[] = []) {
   const notifiedKeyRef = useRef(localStorage.getItem(STORAGE_KEY) ?? '')
 
   useEffect(() => {
     if (!isNotificationSupported()) return
     if (isNotificationDenied()) return
 
-    const alerts = computeAlerts(purchases)
+    const alerts = computeAlerts(purchases, depletions)
     const key = alerts
       .map(a => `${a.name}:${a.daysUntilEmpty}`)
       .sort()
@@ -32,5 +32,5 @@ export function useNotifications(purchases: PurchaseRecord[]) {
       localStorage.setItem(STORAGE_KEY, key)
       sendAlertNotification(alerts)
     })
-  }, [purchases])
+  }, [purchases, depletions])
 }

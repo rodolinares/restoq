@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 
 export function AlertsView() {
   const purchases = usePurchaseStore(s => s.purchases)
+  const depletions = usePurchaseStore(s => s.depletions)
   const resetAll = usePurchaseStore(s => s.resetAll)
 
   const alerts = useMemo(() => {
@@ -22,14 +23,14 @@ export function AlertsView() {
 
     const result: { name: string; prediction: ProductPrediction }[] = []
     for (const [name, { records }] of map) {
-      const pred = predictConsumption(records)
+      const pred = predictConsumption(records, depletions)
       if (pred && pred.daysUntilEmpty !== null && pred.daysUntilEmpty <= 7) {
         result.push({ name, prediction: pred })
       }
     }
 
     return result.sort((a, b) => (a.prediction.daysUntilEmpty ?? Infinity) - (b.prediction.daysUntilEmpty ?? Infinity))
-  }, [purchases])
+  }, [purchases, depletions])
 
   const [confirmReset, setConfirmReset] = useState(false)
 

@@ -1,16 +1,17 @@
 import { useState, useMemo } from 'react'
-import { Clock, PackageOpen, Plus, Search, Trash2, X } from 'lucide-react'
+import { Clock, Frown, PackageOpen, Plus, Search, Trash2, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { usePurchaseStore } from '@/store/inventoryStore'
 import { predictConsumption } from '@/lib/prediction'
-import type { PurchaseRecord, ProductPrediction } from '@/types/inventory'
+import type { PurchaseRecord, ProductPrediction, Depletion } from '@/types/inventory'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { PurchaseFormDialog } from './PurchaseFormDialog'
 import { ConfirmDeleteDialog } from './ConfirmDeleteDialog'
 
 const groupByProduct = (
-  purchases: PurchaseRecord[]
+  purchases: PurchaseRecord[],
+  depletions: Depletion[] = []
 ): { name: string; records: PurchaseRecord[]; prediction: ProductPrediction | null }[] => {
   const map = new Map<string, PurchaseRecord[]>()
   for (const p of purchases) {
@@ -22,13 +23,14 @@ const groupByProduct = (
     .map(([name, records]) => ({
       name,
       records: records.sort((a, b) => b.purchaseDate.localeCompare(a.purchaseDate)),
-      prediction: predictConsumption(records)
+      prediction: predictConsumption(records, depletions)
     }))
     .sort((a, b) => a.name.localeCompare(b.name))
 }
 
 export function InventoryView() {
   const purchases = usePurchaseStore(s => s.purchases)
+  const depletions = usePurchaseStore(s => s.depletions)
   const removePurchase = usePurchaseStore(s => s.removePurchase)
 
   const [search, setSearch] = useState('')
@@ -36,16 +38,16 @@ export function InventoryView() {
   const [deletingPurchase, setDeletingPurchase] = useState<PurchaseRecord | undefined>(undefined)
 
   const groups = useMemo(() => {
-    const all = groupByProduct(purchases)
+    const all = groupByProduct(purchases, depletions)
     if (!search.trim()) return all
     const q = search.toLowerCase()
     return all.filter(g => g.name.toLowerCase().includes(q))
-  }, [purchases, search])
+  }, [purchases, depletions, search])
 
   const handleDelete = (record: PurchaseRecord) => {
     removePurchase(record.id)
     setDeletingPurchase(undefined)
-    toast('Purchase removed', { icon: <Trash2 className="size-4" /> })
+    toast('Purchase removed', { icon: <Trash2 className="size-4" />, duration: 3000 })
   }
 
   return (
@@ -128,15 +130,40 @@ interface ProductGroupProps {
   onDeleteRecord: (record: PurchaseRecord) => void
 }
 
+function getProductDepletion(productName: string, depletions: Depletion[]): Depletion | undefined {
+  const matches = depletions.filter(d => d.productName === productName)
+  if (matches.length === 0) return undefined
+  return matches.sort((a, b) => b.depletedAt.localeCompare(a.depletedAt))[0]
+}
+
 const ProductGroup = ({ group, onDeleteRecord }: ProductGroupProps) => {
+  const depletions = usePurchaseStore(s => s.depletions)
+  const markDepleted = usePurchaseStore(s => s.markDepleted)
+  const clearDepletion = usePurchaseStore(s => s.clearDepletion)
+
   const pred = group.prediction
-  const isExpired = pred?.daysUntilEmpty !== null && pred?.daysUntilEmpty !== undefined && pred.daysUntilEmpty <= 0
+  const depletion = getProductDepletion(group.name, depletions)
+  const isDepleted = depletion !== undefined
+
+  const isExpired =
+    !isDepleted && pred?.daysUntilEmpty !== null && pred?.daysUntilEmpty !== undefined && pred.daysUntilEmpty <= 0
 
   const isLow =
+    !isDepleted &&
     pred?.daysUntilEmpty !== null &&
     pred?.daysUntilEmpty !== undefined &&
     pred.daysUntilEmpty > 0 &&
     pred.daysUntilEmpty <= 7
+
+  const handleMarkDepleted = () => {
+    markDepleted(group.name)
+    toast(`Marked "${group.name}" as depleted`, { duration: 3000 })
+  }
+
+  const handleUndoDepleted = () => {
+    clearDepletion(group.name)
+    toast(`Restored "${group.name}"`, { duration: 3000 })
+  }
 
   return (
     <div className="rounded-lg border border-border bg-card">
@@ -149,41 +176,79 @@ const ProductGroup = ({ group, onDeleteRecord }: ProductGroupProps) => {
                 Stock:{' '}
                 <span
                   className={
-                    isExpired
+                    isDepleted || isExpired
                       ? 'font-medium text-destructive'
                       : isLow
                         ? 'font-medium text-amber-600 dark:text-amber-400'
                         : 'font-medium text-foreground'
                   }
                 >
-                  {pred.estimatedCurrentStock}
+                  {isDepleted ? 0 : pred.estimatedCurrentStock}
                 </span>
               </span>
-              {pred.daysUntilEmpty !== null && (
+              {!isDepleted && pred.daysUntilEmpty !== null && (
                 <span>
                   &middot; ~{Math.round(pred.daysUntilEmpty)} {Math.round(pred.daysUntilEmpty) === 1 ? 'day' : 'days'}
                 </span>
               )}
-              {pred.confidence === 'low' && <span className="text-muted-foreground/60">(estimate)</span>}
-              {pred.confidence === 'high' && (
+              {isDepleted && depletion && (
+                <span className="text-muted-foreground/60">&middot; Depleted {depletion.depletedAt}</span>
+              )}
+              {!isDepleted && pred.confidence === 'low' && <span className="text-muted-foreground/60">(estimate)</span>}
+              {!isDepleted && pred.confidence === 'high' && (
                 <span className="text-emerald-600 dark:text-emerald-400">(high confidence)</span>
               )}
-              {pred.dailyUsage !== null && (
+              {!isDepleted && pred.dailyUsage !== null && (
                 <span className="text-muted-foreground/60">&middot; {pred.dailyUsage}/day</span>
               )}
             </div>
           )}
         </div>
-        {isExpired && (
-          <span className="ml-2 shrink-0 rounded-full bg-destructive/12 px-2.5 py-0.5 text-xs font-medium text-destructive">
-            Out
-          </span>
-        )}
-        {isLow && (
-          <span className="ml-2 shrink-0 rounded-full bg-amber-100/70 px-2.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/25 dark:text-amber-300">
-            Low
-          </span>
-        )}
+
+        <div className="ml-2 flex shrink-0 items-center gap-1.5">
+          {isDepleted ? (
+            <>
+              <span className="rounded-full bg-destructive/12 px-2.5 py-0.5 text-xs font-medium text-destructive">
+                Depleted
+              </span>
+              <Button
+                type="button"
+                size="icon-xs"
+                variant="ghost"
+                onClick={handleUndoDepleted}
+                aria-label="Undo mark as depleted"
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="size-3" />
+              </Button>
+            </>
+          ) : (
+            <>
+              {isExpired && (
+                <span className="rounded-full bg-destructive/12 px-2.5 py-0.5 text-xs font-medium text-destructive">
+                  Out
+                </span>
+              )}
+              {isLow && (
+                <span className="rounded-full bg-amber-100/70 px-2.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/25 dark:text-amber-300">
+                  Low
+                </span>
+              )}
+              {group.records.length > 0 && (
+                <Button
+                  type="button"
+                  size="icon-xs"
+                  variant="ghost"
+                  onClick={handleMarkDepleted}
+                  aria-label="Mark as depleted"
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <Frown className="size-3.5" />
+                </Button>
+              )}
+            </>
+          )}
+        </div>
       </div>
 
       <div className="divide-y divide-border">
