@@ -39,7 +39,6 @@ export function AlertsView() {
         <BellOff className="size-12 text-muted-foreground" />
         <h2 className="text-lg font-semibold">All stocked up</h2>
         <p className="max-w-64 text-sm text-muted-foreground">No products are predicted to run out soon.</p>
-
       </div>
     )
   }

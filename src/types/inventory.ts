@@ -14,5 +14,3 @@ export interface ProductPrediction {
   lastPurchaseUnits: number | null
   confidence: 'low' | 'medium' | 'high'
 }
-
-

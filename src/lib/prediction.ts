@@ -54,9 +54,7 @@ export function predictConsumption(
   }
 }
 
-export function computeAlertCount(
-  purchases: Array<{ name: string; units: number; purchaseDate: string }>
-): number {
+export function computeAlertCount(purchases: Array<{ name: string; units: number; purchaseDate: string }>): number {
   const map = new Map<string, Array<{ name: string; units: number; purchaseDate: string }>>()
   for (const p of purchases) {
     const list = map.get(p.name) ?? []
