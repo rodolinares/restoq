@@ -43,8 +43,9 @@ pnpm deploy      # pnpm build && gh-pages -d dist
 
 - **Single-page app** — tab-based navigation (Inventory / Alerts) managed by `useState`, no router.
 - Front-end only, all state persisted locally (no backend, no auth, no network dependency).
-- **Data model**: `PurchaseRecord` (id, name, units, purchaseDate) stored in Zustand with `persist` middleware → `localStorage`.
+- **Data model**: `PurchaseRecord` (id, name, units, purchaseDate) and `Depletion` (productName, depletedAt) stored in Zustand with `persist` middleware → `localStorage`.
 - **Prediction**: `predictConsumption` in `src/lib/prediction.ts` derives consumption rate from purchase history to estimate current stock and days until empty. Grouped by product name in components.
+- **Depletion**: `markDepleted` in the Zustand store records when a product runs out. When a depletion exists after the last purchase, `predictConsumption` overrides stock to 0 and days-until-empty to 0. A `Frown` icon button in `ProductGroup` triggers depletion; an `X` button undoes it.
 - **Alerts**: `computeAlerts` in `src/lib/notifications.ts` filters products with ≤7 days until empty. Displayed in `AlertsView` with overdue and low-stock badges.
 - **Notifications**: `useNotifications` hook requests permission and sends browser notifications via the service worker when alert state changes.
 - **Theme**: `useTheme` hook persists a dark/light preference to localStorage, defaults to system preference, toggles `.dark` class on `<html>`.
