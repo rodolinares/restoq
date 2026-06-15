@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, type FormEvent } from 'react'
 import { toast } from 'sonner'
-import { usePurchaseStore } from '@/store'
+import { usePurchaseStore } from '@/store/inventoryStore'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'

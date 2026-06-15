@@ -15,6 +15,4 @@ export interface ProductPrediction {
   confidence: 'low' | 'medium' | 'high'
 }
 
-export interface PredictionEngine {
-  predict: (records: PurchaseRecord[]) => ProductPrediction | null
-}
+

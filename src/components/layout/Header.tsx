@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { Bell, Moon, Package, Sun } from 'lucide-react'
-import { usePurchaseStore } from '@/store'
-import { purchaseEngine } from '@/lib/prediction'
+import { usePurchaseStore } from '@/store/inventoryStore'
+import { computeAlertCount } from '@/lib/prediction'
 
 interface HeaderProps {
   theme: 'dark' | 'light'
@@ -12,30 +12,7 @@ interface HeaderProps {
 export function Header({ theme, onToggleTheme, onAlertsClick }: HeaderProps) {
   const purchases = usePurchaseStore(s => s.purchases)
 
-  const alertCount = useMemo(() => {
-    const map = new Map<string, { units: number; date: string }[]>()
-    for (const p of purchases) {
-      const list = map.get(p.name) ?? []
-      list.push({ units: p.units, date: p.purchaseDate })
-      map.set(p.name, list)
-    }
-
-    let count = 0
-    for (const records of map.values()) {
-      const pred = purchaseEngine.predict(
-        records.map(r => ({
-          id: '',
-          name: '',
-          units: r.units,
-          purchaseDate: r.date
-        }))
-      )
-      if (pred && pred.daysUntilEmpty !== null && pred.daysUntilEmpty <= 7) {
-        count++
-      }
-    }
-    return count
-  }, [purchases])
+  const alertCount = useMemo(() => computeAlertCount(purchases), [purchases])
 
   return (
     <header className="flex items-center justify-between border-b border-border bg-background px-4 py-3">

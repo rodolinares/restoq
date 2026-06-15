@@ -1,9 +1,9 @@
 import { useState, useMemo } from 'react'
 import { Clock, PackageOpen, Plus, Search, Trash2, X } from 'lucide-react'
 import { toast } from 'sonner'
-import { usePurchaseStore } from '@/store'
-import { purchaseEngine } from '@/lib/prediction'
-import type { PurchaseRecord, ProductPrediction } from '@/types'
+import { usePurchaseStore } from '@/store/inventoryStore'
+import { predictConsumption } from '@/lib/prediction'
+import type { PurchaseRecord, ProductPrediction } from '@/types/inventory'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { PurchaseFormDialog } from './PurchaseFormDialog'
@@ -22,7 +22,7 @@ const groupByProduct = (
     .map(([name, records]) => ({
       name,
       records: records.sort((a, b) => b.purchaseDate.localeCompare(a.purchaseDate)),
-      prediction: purchaseEngine.predict(records)
+      prediction: predictConsumption(records)
     }))
     .sort((a, b) => a.name.localeCompare(b.name))
 }

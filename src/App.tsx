@@ -7,7 +7,7 @@ import { InventoryView } from './components/inventory/InventoryView'
 import { AlertsView } from './components/alerts/AlertsView'
 import type { TabId } from './components/layout/BottomNav'
 import { useTheme } from './hooks/useTheme'
-import { usePurchaseStore } from './store'
+import { usePurchaseStore } from './store/inventoryStore'
 import { useNotifications } from './hooks/useNotifications'
 
 const App = () => {

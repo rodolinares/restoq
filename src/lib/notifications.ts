@@ -1,3 +1,5 @@
+import { predictConsumption } from '@/lib/prediction'
+
 export interface AlertItem {
   name: string
   daysUntilEmpty: number
@@ -76,44 +78,24 @@ export async function sendAlertNotification(alerts: AlertItem[]): Promise<void> 
 }
 
 export function computeAlerts(purchases: Array<{ name: string; units: number; purchaseDate: string }>): AlertItem[] {
-  const map = new Map<string, Array<{ units: number; purchaseDate: string }>>()
+  const map = new Map<string, Array<{ name: string; units: number; purchaseDate: string }>>()
   for (const p of purchases) {
     const list = map.get(p.name) ?? []
-    list.push({ units: p.units, purchaseDate: p.purchaseDate })
+    list.push(p)
     map.set(p.name, list)
   }
 
   const alerts: AlertItem[] = []
 
   for (const [name, records] of map) {
-    const sorted = [...records].sort((a, b) => a.purchaseDate.localeCompare(b.purchaseDate))
-    const totalUnits = records.reduce((sum, r) => sum + r.units, 0)
-
-    if (records.length === 1) continue
-
-    const MS_PER_DAY = 86_400_000
-    const toDate = (s: string) => new Date(s + 'T00:00:00')
-    const firstDate = toDate(sorted[0].purchaseDate)
-    const lastDate = toDate(sorted[sorted.length - 1].purchaseDate)
-    const daysSpan = Math.max((lastDate.getTime() - firstDate.getTime()) / MS_PER_DAY, 1)
-    const dailyRate = totalUnits / daysSpan
-    if (dailyRate <= 0) continue
-
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const daysSinceLastPurchase = Math.max((today.getTime() - lastDate.getTime()) / MS_PER_DAY, 0)
-
-    const lastRecord = sorted[sorted.length - 1]
-    const estimatedCurrentStock = Math.max(0, lastRecord.units - daysSinceLastPurchase * dailyRate)
-    const daysUntilEmpty = estimatedCurrentStock / dailyRate
-    const rounded = Math.round(daysUntilEmpty * 10) / 10
-
-    if (rounded <= 7) {
+    if (records.length <= 1) continue
+    const pred = predictConsumption(records)
+    if (pred && pred.daysUntilEmpty !== null && pred.daysUntilEmpty <= 7) {
       alerts.push({
         name,
-        daysUntilEmpty: rounded,
-        estimatedCurrentStock: Math.round(estimatedCurrentStock * 10) / 10,
-        isOverdue: rounded <= 0
+        daysUntilEmpty: pred.daysUntilEmpty,
+        estimatedCurrentStock: pred.estimatedCurrentStock,
+        isOverdue: pred.daysUntilEmpty <= 0
       })
     }
   }

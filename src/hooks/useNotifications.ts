@@ -6,7 +6,7 @@ import {
   sendAlertNotification,
   computeAlerts
 } from '@/lib/notifications'
-import type { PurchaseRecord } from '@/types'
+import type { PurchaseRecord } from '@/types/inventory'
 
 const STORAGE_KEY = 'restoq-notified-alerts'
 

@@ -1,14 +1,13 @@
 import { useMemo, useState } from 'react'
-import { BellOff, FlaskConical, RotateCcw } from 'lucide-react'
-import { usePurchaseStore } from '@/store'
-import { purchaseEngine } from '@/lib/prediction'
-import type { ProductPrediction } from '@/types'
+import { BellOff, RotateCcw } from 'lucide-react'
+import { usePurchaseStore } from '@/store/inventoryStore'
+import { predictConsumption } from '@/lib/prediction'
+import type { ProductPrediction } from '@/types/inventory'
 import { Button } from '@/components/ui/button'
 
 export function AlertsView() {
   const purchases = usePurchaseStore(s => s.purchases)
   const resetAll = usePurchaseStore(s => s.resetAll)
-  const generateTestData = usePurchaseStore(s => s.generateTestData)
 
   const alerts = useMemo(() => {
     const map = new Map<string, { records: typeof purchases; prediction: ProductPrediction | null }>()
@@ -23,7 +22,7 @@ export function AlertsView() {
 
     const result: { name: string; prediction: ProductPrediction }[] = []
     for (const [name, { records }] of map) {
-      const pred = purchaseEngine.predict(records)
+      const pred = predictConsumption(records)
       if (pred && pred.daysUntilEmpty !== null && pred.daysUntilEmpty <= 7) {
         result.push({ name, prediction: pred })
       }
@@ -40,10 +39,7 @@ export function AlertsView() {
         <BellOff className="size-12 text-muted-foreground" />
         <h2 className="text-lg font-semibold">All stocked up</h2>
         <p className="max-w-64 text-sm text-muted-foreground">No products are predicted to run out soon.</p>
-        <Button variant="outline" size="sm" onClick={generateTestData} className="mt-4">
-          <FlaskConical className="mr-1.5 size-3.5" />
-          Generate test data
-        </Button>
+
       </div>
     )
   }

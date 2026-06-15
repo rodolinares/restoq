@@ -1,18 +1,12 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { PurchaseRecord } from '@/types'
-import { getTestPurchases } from '@/lib/testData'
-
-const generateId = (): string => {
-  return crypto.randomUUID()
-}
+import type { PurchaseRecord } from '@/types/inventory'
 
 export interface PurchaseStore {
   purchases: PurchaseRecord[]
   addPurchase: (purchase: Omit<PurchaseRecord, 'id'>) => void
   removePurchase: (id: string) => void
   resetAll: () => void
-  generateTestData: () => void
 }
 
 export const usePurchaseStore = create<PurchaseStore>()(
@@ -22,7 +16,7 @@ export const usePurchaseStore = create<PurchaseStore>()(
 
       addPurchase: purchase =>
         set(state => ({
-          purchases: [...state.purchases, { ...purchase, id: generateId() }]
+          purchases: [...state.purchases, { ...purchase, id: crypto.randomUUID() }]
         })),
 
       removePurchase: id =>
@@ -32,12 +26,6 @@ export const usePurchaseStore = create<PurchaseStore>()(
 
       resetAll: () => {
         set({ purchases: [] })
-      },
-
-      generateTestData: () => {
-        set(state => ({
-          purchases: [...state.purchases, ...getTestPurchases().map(p => ({ ...p, id: generateId() }))]
-        }))
       }
     }),
     {
