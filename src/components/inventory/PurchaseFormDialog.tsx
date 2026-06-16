@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect, type FormEvent } from 'react'
+import { useState, useRef, useEffect, type FormEvent, type FocusEvent } from 'react'
+import { useVisualViewport } from '@/hooks/useVisualViewport'
 import { toast } from 'sonner'
 import { usePurchaseStore } from '@/store/inventoryStore'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog'
@@ -27,6 +28,28 @@ const emptyForm: FormState = {
 export function PurchaseFormDialog({ open, onOpenChange, existingNames }: PurchaseFormDialogProps) {
   const addPurchase = usePurchaseStore(s => s.addPurchase)
   const nameRef = useRef<HTMLInputElement>(null)
+  const vvHeight = useVisualViewport()
+  const [layoutHeight, setLayoutHeight] = useState(window.innerHeight)
+
+  useEffect(() => {
+    const onResize = () => setLayoutHeight(window.innerHeight)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+
+  const keyboardHeight = Math.max(0, layoutHeight - vvHeight)
+  const isKeyboardOpen = keyboardHeight > 80
+
+  const dialogStyle: React.CSSProperties | undefined = isKeyboardOpen
+    ? {
+        bottom: keyboardHeight,
+        maxHeight: vvHeight - 32,
+      }
+    : undefined
+
+  const scrollInputIntoView = (e: FocusEvent<HTMLInputElement>) => {
+    setTimeout(() => e.target.scrollIntoView({ block: 'center', behavior: 'smooth' }), 350)
+  }
 
   useEffect(() => {
     if (open) {
@@ -74,7 +97,10 @@ export function PurchaseFormDialog({ open, onOpenChange, existingNames }: Purcha
 
   return (
     <Dialog open={open} onOpenChange={resetAndClose}>
-      <DialogContent className="pb-[env(safe-area-inset-bottom,16px)]">
+      <DialogContent
+        className="overflow-y-auto transition-[bottom] duration-200 pb-[env(safe-area-inset-bottom,16px)]"
+        style={dialogStyle}
+      >
         <DialogHeader>
           <DialogTitle>Record Purchase</DialogTitle>
         </DialogHeader>
@@ -89,6 +115,7 @@ export function PurchaseFormDialog({ open, onOpenChange, existingNames }: Purcha
               placeholder="e.g. 1L Water Bottle"
               value={form.name}
               onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+              onFocus={scrollInputIntoView}
               aria-invalid={!!errors.name}
             />
             <datalist id="product-suggestions">
@@ -109,6 +136,7 @@ export function PurchaseFormDialog({ open, onOpenChange, existingNames }: Purcha
               placeholder="e.g. 6"
               value={form.units}
               onChange={e => setForm(f => ({ ...f, units: e.target.value }))}
+              onFocus={scrollInputIntoView}
               aria-invalid={!!errors.units}
             />
             {errors.units && <p className="text-xs text-destructive">{errors.units}</p>}
@@ -121,6 +149,7 @@ export function PurchaseFormDialog({ open, onOpenChange, existingNames }: Purcha
               type="date"
               value={form.purchaseDate}
               onChange={e => setForm(f => ({ ...f, purchaseDate: e.target.value }))}
+              onFocus={scrollInputIntoView}
               aria-invalid={!!errors.purchaseDate}
             />
             {errors.purchaseDate && <p className="text-xs text-destructive">{errors.purchaseDate}</p>}
