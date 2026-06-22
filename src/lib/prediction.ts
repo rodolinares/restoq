@@ -1,109 +1,102 @@
-import type { ProductPrediction, Depletion } from '@/types/inventory'
+import type { Product, StockSnapshot, Purchase, ProductPrediction } from '@/types/inventory'
 
 const MS_PER_DAY = 86_400_000
 
-const toDate = (s: string): Date => {
-  return new Date(s + 'T00:00:00')
+const daysBetween = (a: string, b: string): number => {
+  return (new Date(b).getTime() - new Date(a).getTime()) / MS_PER_DAY
 }
 
-function getLastDepletion(productName: string, depletions: Depletion[]): Depletion | undefined {
-  const matches = depletions.filter(d => d.productName === productName)
-  if (matches.length === 0) return undefined
-  return matches.sort((a, b) => b.depletedAt.localeCompare(a.depletedAt))[0]
-}
+export function predictProduct(
+  product: Product,
+  snapshots: StockSnapshot[],
+  purchases: Purchase[]
+): ProductPrediction {
+  const sorted = [...snapshots].sort((a, b) => a.takenAt.localeCompare(b.takenAt))
+  const now = new Date().toISOString()
 
-export function predictConsumption(
-  records: Array<{ name: string; units: number; purchaseDate: string }>,
-  depletions: Depletion[] = []
-): ProductPrediction | null {
-  if (records.length === 0) return null
-
-  const sorted = [...records].sort((a, b) => a.purchaseDate.localeCompare(b.purchaseDate))
-  const totalUnits = records.reduce((sum, r) => sum + r.units, 0)
-
-  const lastRecord = sorted[sorted.length - 1]
-  const depletion = getLastDepletion(lastRecord.name, depletions)
-  const isDepleted = depletion !== undefined && depletion.depletedAt >= lastRecord.purchaseDate
-
-  if (isDepleted) {
+  if (sorted.length <= 1) {
+    const currentStock = sorted.length === 1 ? sorted[0].quantity : 0
     return {
-      name: lastRecord.name,
-      dailyUsage:
-        records.length >= 2
-          ? Math.round(
-              (totalUnits /
-                Math.max(
-                  (toDate(sorted[sorted.length - 1].purchaseDate).getTime() -
-                    toDate(sorted[0].purchaseDate).getTime()) /
-                    MS_PER_DAY,
-                  1
-                )) *
-                100
-            ) / 100
-          : null,
-      daysUntilEmpty: 0,
-      estimatedCurrentStock: 0,
-      lastPurchaseDate: lastRecord.purchaseDate,
-      lastPurchaseUnits: lastRecord.units,
-      confidence: records.length <= 2 ? 'low' : records.length <= 5 ? 'medium' : 'high'
-    }
-  }
-
-  if (records.length === 1) {
-    const r = records[0]
-    return {
-      name: r.name,
-      dailyUsage: null,
+      currentStock,
+      consumptionRatePerDay: 0,
       daysUntilEmpty: null,
-      estimatedCurrentStock: r.units,
-      lastPurchaseDate: r.purchaseDate,
-      lastPurchaseUnits: r.units,
-      confidence: 'low'
+      confidence: 'none',
+      isAlert: currentStock <= product.targetStock && sorted.length === 1,
+      isOverdue: false
     }
   }
 
-  const firstDate = toDate(sorted[0].purchaseDate)
-  const lastDate = toDate(sorted[sorted.length - 1].purchaseDate)
-  const daysSpan = Math.max((lastDate.getTime() - firstDate.getTime()) / MS_PER_DAY, 1)
+  const productPurchases = purchases.filter(p => p.productId === product.id)
+  const rates: number[] = []
 
-  const dailyRate = totalUnits / daysSpan
+  for (let i = 0; i < sorted.length - 1; i++) {
+    const older = sorted[i]
+    const newer = sorted[i + 1]
+    const d = daysBetween(older.takenAt, newer.takenAt)
+    if (d <= 0) continue
 
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const daysSinceLastPurchase = Math.max((today.getTime() - lastDate.getTime()) / MS_PER_DAY, 0)
+    const betweenPurchases = productPurchases.filter(
+      p => p.purchasedAt > older.takenAt && p.purchasedAt <= newer.takenAt
+    )
+    const totalBetween = betweenPurchases.reduce((sum, p) => sum + p.quantity, 0)
+    const consumed = older.quantity + totalBetween - newer.quantity
+    const rate = consumed / d
 
-  const estimatedCurrentStock = Math.max(0, lastRecord.units - daysSinceLastPurchase * dailyRate)
-  const daysUntilEmpty = dailyRate > 0 ? estimatedCurrentStock / dailyRate : null
+    if (rate > 0) {
+      rates.push(rate)
+    }
+  }
 
-  const confidence = records.length <= 2 ? 'low' : records.length <= 5 ? 'medium' : 'high'
+  if (rates.length === 0) {
+    const currentStock = sorted[sorted.length - 1].quantity
+    return {
+      currentStock,
+      consumptionRatePerDay: 0,
+      daysUntilEmpty: null,
+      confidence: 'none',
+      isAlert: currentStock <= product.targetStock,
+      isOverdue: false
+    }
+  }
+
+  const avgRate = rates.reduce((sum, r) => sum + r, 0) / rates.length
+
+  const newest = sorted[sorted.length - 1]
+  const sinceLast = productPurchases.filter(p => p.purchasedAt > newest.takenAt)
+  const totalSinceLast = sinceLast.reduce((sum, p) => sum + p.quantity, 0)
+
+  const daysSince = Math.max(daysBetween(newest.takenAt, now), 0)
+  const rawStock = newest.quantity + totalSinceLast - avgRate * daysSince
+  const currentStock = Math.max(0, rawStock)
+  const daysUntilEmpty = avgRate > 0 ? currentStock / avgRate : null
+
+  const snapCount = sorted.length
+  const confidence = snapCount <= 2 ? 'low' : snapCount <= 4 ? 'medium' : 'high'
+
+  const isOverdue = daysUntilEmpty !== null && daysUntilEmpty <= 0
+  const isAlert = (daysUntilEmpty !== null && daysUntilEmpty <= 7) || currentStock <= product.targetStock
 
   return {
-    name: lastRecord.name,
-    dailyUsage: Math.round(dailyRate * 100) / 100,
+    currentStock: Math.round(currentStock * 10) / 10,
+    consumptionRatePerDay: Math.round(avgRate * 100) / 100,
     daysUntilEmpty: daysUntilEmpty !== null ? Math.round(daysUntilEmpty * 10) / 10 : null,
-    estimatedCurrentStock: Math.round(estimatedCurrentStock * 10) / 10,
-    lastPurchaseDate: lastRecord.purchaseDate,
-    lastPurchaseUnits: lastRecord.units,
-    confidence
+    confidence,
+    isAlert,
+    isOverdue
   }
 }
 
 export function computeAlertCount(
-  purchases: Array<{ name: string; units: number; purchaseDate: string }>,
-  depletions: Depletion[] = []
+  products: Product[],
+  snapshots: StockSnapshot[],
+  purchases: Purchase[]
 ): number {
-  const map = new Map<string, Array<{ name: string; units: number; purchaseDate: string }>>()
-  for (const p of purchases) {
-    const list = map.get(p.name) ?? []
-    list.push(p)
-    map.set(p.name, list)
-  }
   let count = 0
-  for (const records of map.values()) {
-    const pred = predictConsumption(records, depletions)
-    if (pred && pred.daysUntilEmpty !== null && pred.daysUntilEmpty <= 7) {
-      count++
-    }
+  for (const product of products) {
+    const productSnapshots = snapshots.filter(s => s.productId === product.id)
+    const productPurchases = purchases.filter(p => p.productId === product.id)
+    const pred = predictProduct(product, productSnapshots, productPurchases)
+    if (pred.isAlert) count++
   }
   return count
 }

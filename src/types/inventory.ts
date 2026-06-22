@@ -1,21 +1,33 @@
-export interface PurchaseRecord {
+export type ProductCategory = 'pantry' | 'cleaning' | 'bathroom' | 'pets' | 'other'
+
+export interface Product {
   id: string
   name: string
-  units: number
-  purchaseDate: string
+  category: ProductCategory
+  unit: string
+  targetStock: number
+  createdAt: string
 }
 
-export interface Depletion {
-  productName: string
-  depletedAt: string
+export interface StockSnapshot {
+  id: string
+  productId: string
+  quantity: number
+  takenAt: string
+}
+
+export interface Purchase {
+  id: string
+  productId: string
+  quantity: number
+  purchasedAt: string
 }
 
 export interface ProductPrediction {
-  name: string
-  dailyUsage: number | null
+  currentStock: number
+  consumptionRatePerDay: number
   daysUntilEmpty: number | null
-  estimatedCurrentStock: number
-  lastPurchaseDate: string | null
-  lastPurchaseUnits: number | null
-  confidence: 'low' | 'medium' | 'high'
+  confidence: 'none' | 'low' | 'medium' | 'high'
+  isAlert: boolean
+  isOverdue: boolean
 }

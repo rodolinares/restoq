@@ -5,25 +5,39 @@ import { BottomNav } from './components/layout/BottomNav'
 import { AppShell } from './components/layout/AppShell'
 import { InventoryView } from './components/inventory/InventoryView'
 import { AlertsView } from './components/alerts/AlertsView'
+import { ShoppingView } from './components/shopping/ShoppingView'
 import type { TabId } from './components/layout/BottomNav'
 import { useTheme } from './hooks/useTheme'
-import { usePurchaseStore } from './store/inventoryStore'
+import { useInventoryStore } from './store/inventoryStore'
 import { useNotifications } from './hooks/useNotifications'
 
 const App = () => {
   const [activeTab, setActiveTab] = useState<TabId>('inventory')
   const { theme, toggle: toggleTheme } = useTheme()
-  const purchases = usePurchaseStore(s => s.purchases)
-  const depletions = usePurchaseStore(s => s.depletions)
-  useNotifications(purchases, depletions)
+  const products = useInventoryStore(s => s.products)
+  const snapshots = useInventoryStore(s => s.snapshots)
+  const purchases = useInventoryStore(s => s.purchases)
+  useNotifications(products, snapshots, purchases)
 
   return (
     <>
       <AppShell
-        header={<Header theme={theme} onToggleTheme={toggleTheme} onAlertsClick={() => setActiveTab('alerts')} />}
+        header={
+          <Header
+            theme={theme}
+            onToggleTheme={toggleTheme}
+            onAlertsClick={() => setActiveTab('alerts')}
+          />
+        }
         nav={<BottomNav activeTab={activeTab} onTabChange={setActiveTab} />}
       >
-        {activeTab === 'inventory' ? <InventoryView /> : <AlertsView />}
+        {activeTab === 'inventory' && <InventoryView />}
+        {activeTab === 'alerts' && (
+          <AlertsView
+            onGenerateShoppingList={() => setActiveTab('shopping')}
+          />
+        )}
+        {activeTab === 'shopping' && <ShoppingView />}
       </AppShell>
       <Toaster
         position="bottom-center"

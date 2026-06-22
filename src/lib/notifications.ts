@@ -1,10 +1,10 @@
-import { predictConsumption } from '@/lib/prediction'
-import type { Depletion } from '@/types/inventory'
+import { predictProduct } from '@/lib/prediction'
+import type { Product, StockSnapshot, Purchase } from '@/types/inventory'
 
 export interface AlertItem {
   name: string
   daysUntilEmpty: number
-  estimatedCurrentStock: number
+  currentStock: number
   isOverdue: boolean
 }
 
@@ -79,27 +79,23 @@ export async function sendAlertNotification(alerts: AlertItem[]): Promise<void> 
 }
 
 export function computeAlerts(
-  purchases: Array<{ name: string; units: number; purchaseDate: string }>,
-  depletions: Depletion[] = []
+  products: Product[],
+  snapshots: StockSnapshot[],
+  purchases: Purchase[]
 ): AlertItem[] {
-  const map = new Map<string, Array<{ name: string; units: number; purchaseDate: string }>>()
-  for (const p of purchases) {
-    const list = map.get(p.name) ?? []
-    list.push(p)
-    map.set(p.name, list)
-  }
-
   const alerts: AlertItem[] = []
 
-  for (const [name, records] of map) {
-    if (records.length <= 1) continue
-    const pred = predictConsumption(records, depletions)
-    if (pred && pred.daysUntilEmpty !== null && pred.daysUntilEmpty <= 7) {
+  for (const product of products) {
+    const productSnapshots = snapshots.filter(s => s.productId === product.id)
+    const productPurchases = purchases.filter(p => p.productId === product.id)
+    const pred = predictProduct(product, productSnapshots, productPurchases)
+
+    if (pred.isAlert && pred.daysUntilEmpty !== null) {
       alerts.push({
-        name,
+        name: product.name,
         daysUntilEmpty: pred.daysUntilEmpty,
-        estimatedCurrentStock: pred.estimatedCurrentStock,
-        isOverdue: pred.daysUntilEmpty <= 0
+        currentStock: pred.currentStock,
+        isOverdue: pred.isOverdue
       })
     }
   }

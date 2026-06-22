@@ -1,9 +1,9 @@
 import { useMemo } from 'react'
-import { Bell, Package } from 'lucide-react'
-import { usePurchaseStore } from '@/store/inventoryStore'
+import { Bell, Package, ShoppingCart } from 'lucide-react'
+import { useInventoryStore } from '@/store/inventoryStore'
 import { computeAlertCount } from '@/lib/prediction'
 
-export type TabId = 'inventory' | 'alerts'
+export type TabId = 'inventory' | 'alerts' | 'shopping'
 
 interface BottomNavProps {
   activeTab: TabId
@@ -12,14 +12,19 @@ interface BottomNavProps {
 
 const tabs: { id: TabId; label: string; icon: typeof Package }[] = [
   { id: 'inventory', label: 'Inventory', icon: Package },
-  { id: 'alerts', label: 'Alerts', icon: Bell }
+  { id: 'alerts', label: 'Alerts', icon: Bell },
+  { id: 'shopping', label: 'Shopping', icon: ShoppingCart }
 ]
 
 export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
-  const purchases = usePurchaseStore(s => s.purchases)
-  const depletions = usePurchaseStore(s => s.depletions)
+  const products = useInventoryStore(s => s.products)
+  const snapshots = useInventoryStore(s => s.snapshots)
+  const purchases = useInventoryStore(s => s.purchases)
 
-  const alertCount = useMemo(() => computeAlertCount(purchases, depletions), [purchases, depletions])
+  const alertCount = useMemo(
+    () => computeAlertCount(products, snapshots, purchases),
+    [products, snapshots, purchases]
+  )
 
   return (
     <nav className="relative border-t border-border bg-background pb-[env(safe-area-inset-bottom,0px)]">
@@ -27,7 +32,9 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
         {tabs.map(({ id }) => (
           <div
             key={id}
-            className={'h-0.5 flex-1 transition-colors ' + (activeTab === id ? 'bg-primary' : 'bg-transparent')}
+            className={
+              'h-0.5 flex-1 transition-colors ' + (activeTab === id ? 'bg-primary' : 'bg-transparent')
+            }
           />
         ))}
       </div>
@@ -39,7 +46,9 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
             onClick={() => onTabChange(id)}
             className={
               'relative flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium transition-colors ' +
-              (activeTab === id ? 'text-primary' : 'text-muted-foreground hover:text-foreground')
+              (activeTab === id
+                ? 'text-primary'
+                : 'text-muted-foreground hover:text-foreground')
             }
           >
             <Icon className="size-5" />

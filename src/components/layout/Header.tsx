@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { Bell, Moon, Package, Sun } from 'lucide-react'
-import { usePurchaseStore } from '@/store/inventoryStore'
+import { useInventoryStore } from '@/store/inventoryStore'
 import { computeAlertCount } from '@/lib/prediction'
 
 interface HeaderProps {
@@ -10,10 +10,14 @@ interface HeaderProps {
 }
 
 export function Header({ theme, onToggleTheme, onAlertsClick }: HeaderProps) {
-  const purchases = usePurchaseStore(s => s.purchases)
-  const depletions = usePurchaseStore(s => s.depletions)
+  const products = useInventoryStore(s => s.products)
+  const snapshots = useInventoryStore(s => s.snapshots)
+  const purchases = useInventoryStore(s => s.purchases)
 
-  const alertCount = useMemo(() => computeAlertCount(purchases, depletions), [purchases, depletions])
+  const alertCount = useMemo(
+    () => computeAlertCount(products, snapshots, purchases),
+    [products, snapshots, purchases]
+  )
 
   return (
     <header className="border-b border-border bg-background">
