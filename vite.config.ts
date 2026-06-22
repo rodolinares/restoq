@@ -16,8 +16,8 @@ export default defineConfig({
       filename: 'sw.ts',
       registerType: 'autoUpdate',
       manifest: {
-        name: 'RestoQ',
-        short_name: 'RestoQ',
+        name: 'Restoq',
+        short_name: 'Restoq',
         description: 'Home inventory tracker',
         theme_color: '#18181b',
         background_color: '#ffffff',

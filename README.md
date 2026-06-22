@@ -1,4 +1,4 @@
-# RestoQ — Home Inventory Tracker
+# Restoq — Home Inventory Tracker
 
 Track what you have, predict what you'll need.
 

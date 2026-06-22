@@ -39,7 +39,7 @@ function formatAlertsForNotification(alerts: AlertItem[]): { title: string; body
   if (overdue.length > 0) parts.push(`${overdue.length} overdue for restock`)
   if (low.length > 0) parts.push(`${low.length} running low`)
 
-  const title = `RestoQ — ${parts.join(', ')}`
+  const title = `Restoq — ${parts.join(', ')}`
 
   const items = alerts.slice(0, 4)
   const body =

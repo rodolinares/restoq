@@ -19,7 +19,7 @@ export function Header({ theme, onToggleTheme, onAlertsClick }: HeaderProps) {
     <header className="flex items-center justify-between border-b border-border bg-background px-4 py-3">
       <div className="flex items-center gap-2">
         <Package className="size-5 text-primary" />
-        <span className="text-lg font-semibold tracking-tight">RestoQ</span>
+        <span className="text-lg font-semibold tracking-tight">Restoq</span>
       </div>
 
       <div className="flex items-center gap-1">

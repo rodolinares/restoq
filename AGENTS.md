@@ -1,4 +1,4 @@
-# RestoQ — AGENTS.md
+# Restoq — AGENTS.md
 
 ## Stack
 
