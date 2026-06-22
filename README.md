@@ -1,8 +1,8 @@
 # Restoq — Home Inventory Tracker
 
-Track what you have, predict what you'll need.
+Track what you buy, predict when you'll run out.
 
-A mobile-first PWA for managing home inventory with low-stock alerts and consumption-based depletion predictions. All data stays local — no backend, no sign-up.
+Mobile-first PWA. All data stays local — no backend, no sign-up.
 
 ## Stack
 
@@ -22,35 +22,19 @@ pnpm install
 pnpm dev
 ```
 
-Open the URL Vite prints (usually `http://localhost:5173`).
+Open URL Vite prints (usually `http://localhost:5173/restoq/`).
 
 ## Features
 
-- **Inventory CRUD** — add, edit, delete items with quantity, unit, category, location, and notes.
-- **Quantity adjustments** — tap `+` / `-` to restock or consume. Consumption events are automatically logged.
-- **Consumption predictions** — each item card shows an estimated time until empty based on past usage rate. Confidence level adjusts with more data points (low < 2, medium 2–4, high 5+).
-- **Low-stock / out alerts** — derived from `quantity ≤ minThreshold`, never stored. Presented in a dedicated Alerts tab.
-- **Search, filter, sort** — by name, location, category, or urgency (soonest to run out first).
-- **Dark mode** — respects `prefers-color-scheme`, togglable, persisted in localStorage.
+- **Record purchases** — log product name, units, and purchase date.
+- **Consumption predictions** — each product card shows estimated daily usage, current stock, and days until empty based on purchase history. Confidence: low (< 3 records), medium (3–5), high (6+).
+- **Depletion tracking** — mark product as depleted (Frown icon). Stock resets to 0, days-until-empty to 0. Undo with X icon.
+- **Low-stock alerts** — products with ≤7 days until empty appear in Alerts tab with Overdue / Low badges.
+- **Browser notifications** — permission prompt on first alert; sends notification when alert state changes (deduplicated).
+- **Search** — filter products by name.
+- **Dark mode** — respects `prefers-color-scheme`, togglable, persisted.
 - **PWA** — installable, works offline, auto-updating service worker.
-- **Reset all data** — clear everything from the Alerts tab.
-
-## Architecture
-
-### Prediction Engine
-
-The prediction engine is a replaceable module behind the `PredictionEngine` interface (`src/types/inventory.ts`). The current local implementation (`SimplePredictionEngine` in `src/lib/prediction.ts`) computes an average daily consumption rate from logged consumption events and projects how many days remain until the item reaches zero (or its threshold). To swap in a backend-powered engine, implement the same interface and wire it in — no other code changes needed.
-
-### State
-
-A single Zustand store (`useInventoryStore`) with `persist` middleware writes to `localStorage` key `restoq-inventory`. Everything (items + consumption log) is serialized and restored on page load.
-
-### Data model
-
-- **InventoryItem** — id, name, category, quantity, minThreshold, unit, location, notes, createdAt, updatedAt
-- **ConsumptionEvent** — id, itemId, delta (negative), quantityAfter, timestamp
-
-Low-stock is a derived filter (`quantity <= minThreshold`), never stored.
+- **Reset all data** — clear everything from Alerts tab (confirms first).
 
 ## Commands
 
@@ -58,6 +42,29 @@ Low-stock is a derived filter (`quantity <= minThreshold`), never stored.
 | -------------- | ----------------------------------------------- |
 | `pnpm dev`     | Vite dev server                                 |
 | `pnpm build`   | `tsc -b && vite build` (type-check then bundle) |
+| `pnpm test`    | Vitest run                                      |
 | `pnpm lint`    | ESLint 10 (flat config)                         |
 | `pnpm format`  | Prettier on `src/**/*.{css,ts,tsx}`             |
-| `pnpm preview` | `vite preview`                                  |
+| `pnpm preview` | Vite preview                                    |
+| `pnpm deploy`  | Build + deploy to GitHub Pages                  |
+
+## Architecture
+
+### Data Model
+
+- **PurchaseRecord** — `id`, `name`, `units`, `purchaseDate`
+- **Depletion** — `productName`, `depletedAt`
+
+Products grouped by name at consumption time (not stored as separate entities).
+
+### State
+
+Zustand store (`usePurchaseStore`) with `persist` middleware writes to `localStorage` key `restoq-purchases`.
+
+### Prediction Engine
+
+`predictConsumption` in `src/lib/prediction.ts` computes a daily consumption rate from purchase history, estimates current stock from the last purchase, and projects days until empty. Depletion overrides stock to 0 and days-until-empty to 0.
+
+### Notifications
+
+`useNotifications` hook compares current alerts against previously sent ones (`restoq-notified-alerts` in localStorage) to avoid duplicate notifications. Sends via service worker if available, falls back to `new Notification()`.
