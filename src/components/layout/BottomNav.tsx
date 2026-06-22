@@ -22,26 +22,36 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
   const alertCount = useMemo(() => computeAlertCount(purchases, depletions), [purchases, depletions])
 
   return (
-    <nav className="flex border-t border-border bg-background pb-[env(safe-area-inset-bottom,0px)]">
-      {tabs.map(({ id, label, icon: Icon }) => (
-        <button
-          key={id}
-          type="button"
-          onClick={() => onTabChange(id)}
-          className={
-            'relative flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium transition-colors ' +
-            (activeTab === id ? 'text-foreground' : 'text-muted-foreground hover:text-foreground')
-          }
-        >
-          <Icon className="size-5" />
-          <span>{label}</span>
-          {id === 'alerts' && alertCount > 0 && (
-            <span className="absolute right-21 top-1 flex size-4 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-white">
-              {alertCount}
-            </span>
-          )}
-        </button>
-      ))}
+    <nav className="relative border-t border-border bg-background pb-[env(safe-area-inset-bottom,0px)]">
+      <div className="absolute -top-px left-0 right-0 flex">
+        {tabs.map(({ id }) => (
+          <div
+            key={id}
+            className={'h-0.5 flex-1 transition-colors ' + (activeTab === id ? 'bg-primary' : 'bg-transparent')}
+          />
+        ))}
+      </div>
+      <div className="flex">
+        {tabs.map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => onTabChange(id)}
+            className={
+              'relative flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium transition-colors ' +
+              (activeTab === id ? 'text-primary' : 'text-muted-foreground hover:text-foreground')
+            }
+          >
+            <Icon className="size-5" />
+            <span>{label}</span>
+            {id === 'alerts' && alertCount > 0 && (
+              <span className="absolute right-21 top-1 flex size-4 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-white">
+                {alertCount}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
     </nav>
   )
 }

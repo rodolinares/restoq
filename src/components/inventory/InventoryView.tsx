@@ -28,6 +28,15 @@ const groupByProduct = (
     .sort((a, b) => a.name.localeCompare(b.name))
 }
 
+const StockBar = ({ ratio }: { ratio: number }) => (
+  <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+    <div
+      className="h-full rounded-full transition-all duration-300"
+      style={{ width: `${Math.max(0, Math.min(1, ratio)) * 100}%`, background: 'var(--ok)' }}
+    />
+  </div>
+)
+
 export function InventoryView() {
   const purchases = usePurchaseStore(s => s.purchases)
   const depletions = usePurchaseStore(s => s.depletions)
@@ -55,8 +64,8 @@ export function InventoryView() {
       {purchases.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">
           <PackageOpen className="size-12 text-muted-foreground" />
-          <h2 className="text-lg font-semibold">No purchases yet</h2>
-          <p className="max-w-64 text-sm text-muted-foreground">Tap the + button to record your first purchase.</p>
+          <h2 className="text-lg font-semibold">Your pantry is bare</h2>
+          <p className="max-w-64 text-sm text-muted-foreground">Record your first purchase to start tracking.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -98,7 +107,7 @@ export function InventoryView() {
       <Button
         type="button"
         size="icon"
-        className="fixed bottom-20 right-4 z-40 size-12 rounded-full shadow-lg"
+        className="fixed bottom-20 right-4 z-40 size-12 rounded-full shadow-lg bg-primary text-primary-foreground hover:bg-primary/90"
         onClick={() => setShowForm(true)}
       >
         <Plus className="size-6" />
@@ -155,6 +164,17 @@ const ProductGroup = ({ group, onDeleteRecord }: ProductGroupProps) => {
     pred.daysUntilEmpty > 0 &&
     pred.daysUntilEmpty <= 7
 
+  const stock = isDepleted ? 0 : pred?.estimatedCurrentStock ?? 0
+  const stockRatio = isDepleted ? 0 : pred?.lastPurchaseUnits ? stock / pred.lastPurchaseUnits : 1
+
+  const borderColor = isDepleted
+    ? 'var(--muted-foreground)'
+    : isExpired
+      ? 'var(--destructive)'
+      : isLow
+        ? 'var(--warning)'
+        : 'var(--ok)'
+
   const handleMarkDepleted = () => {
     markDepleted(group.name)
     toast(`Marked "${group.name}" as depleted`, { duration: 3000 })
@@ -166,112 +186,99 @@ const ProductGroup = ({ group, onDeleteRecord }: ProductGroupProps) => {
   }
 
   return (
-    <div className="rounded-lg border border-border bg-card">
-      <div className="flex items-center justify-between border-b border-border px-3 py-2.5">
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold">{group.name}</p>
-          {pred && (
-            <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
-              <span>
-                Stock:{' '}
-                <span
-                  className={
-                    isDepleted || isExpired
-                      ? 'font-medium text-destructive'
-                      : isLow
-                        ? 'font-medium text-amber-600 dark:text-amber-400'
-                        : 'font-medium text-foreground'
-                  }
-                >
-                  {isDepleted ? 0 : pred.estimatedCurrentStock}
-                </span>
+    <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+      <div className="flex border-l-4" style={{ borderLeftColor: borderColor }}>
+        <div className="flex-1 p-4">
+          <div className="flex items-start gap-4">
+            <div className="flex shrink-0 items-baseline gap-0.5">
+              <span
+                className="font-heading text-4xl font-bold leading-none tracking-tight"
+                style={{ color: borderColor }}
+              >
+                {stock}
               </span>
-              {!isDepleted && pred.daysUntilEmpty !== null && (
-                <span>
-                  &middot; ~{Math.round(pred.daysUntilEmpty)} {Math.round(pred.daysUntilEmpty) === 1 ? 'day' : 'days'}
+              {!isDepleted && pred?.lastPurchaseUnits && (
+                <span className="text-xs text-muted-foreground">
+                  /{pred.lastPurchaseUnits}
                 </span>
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-heading text-lg font-semibold leading-tight">{group.name}</p>
+              {pred && !isDepleted && pred.daysUntilEmpty !== null && (
+                <p className="mt-0.5 text-sm text-muted-foreground">
+                  ~{Math.round(pred.daysUntilEmpty)}{' '}
+                  {Math.round(pred.daysUntilEmpty) === 1 ? 'day' : 'days'} left
+                  {pred.confidence === 'low' && ' (estimate)'}
+                </p>
               )}
               {isDepleted && depletion && (
-                <span className="text-muted-foreground/60">&middot; Depleted {depletion.depletedAt}</span>
+                <p className="mt-0.5 text-sm text-muted-foreground">
+                  Depleted {depletion.depletedAt}
+                </p>
               )}
-              {!isDepleted && pred.confidence === 'low' && <span className="text-muted-foreground/60">(estimate)</span>}
-              {!isDepleted && pred.confidence === 'high' && (
-                <span className="text-emerald-600 dark:text-emerald-400">(high confidence)</span>
-              )}
-              {!isDepleted && pred.dailyUsage !== null && (
-                <span className="text-muted-foreground/60">&middot; {pred.dailyUsage}/day</span>
+              {!isDepleted && pred && (
+                <div className="mt-2">
+                  <StockBar ratio={stockRatio} />
+                  {pred.dailyUsage !== null && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {pred.dailyUsage}/day &middot; {pred.confidence} confidence
+                    </p>
+                  )}
+                </div>
               )}
             </div>
-          )}
+          </div>
         </div>
-
-        <div className="ml-2 flex shrink-0 items-center gap-1.5">
+        <div className="flex shrink-0 items-start gap-1 p-3">
           {isDepleted ? (
-            <>
-              <span className="rounded-full bg-destructive/12 px-2.5 py-0.5 text-xs font-medium text-destructive">
-                Depleted
-              </span>
-              <Button
-                type="button"
-                size="icon-xs"
-                variant="ghost"
-                onClick={handleUndoDepleted}
-                aria-label="Undo mark as depleted"
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <X className="size-3" />
-              </Button>
-            </>
-          ) : (
-            <>
-              {isExpired && (
-                <span className="rounded-full bg-destructive/12 px-2.5 py-0.5 text-xs font-medium text-destructive">
-                  Out
-                </span>
-              )}
-              {isLow && (
-                <span className="rounded-full bg-amber-100/70 px-2.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/25 dark:text-amber-300">
-                  Low
-                </span>
-              )}
-              {group.records.length > 0 && (
-                <Button
-                  type="button"
-                  size="icon-xs"
-                  variant="ghost"
-                  onClick={handleMarkDepleted}
-                  aria-label="Mark as depleted"
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  <Frown className="size-3.5" />
-                </Button>
-              )}
-            </>
-          )}
-        </div>
-      </div>
-
-      <div className="divide-y divide-border">
-        {group.records.map(record => (
-          <div key={record.id} className="flex items-center justify-between px-3 py-2">
-            <div className="flex items-center gap-2 text-sm">
-              <Clock className="size-3.5 text-muted-foreground" />
-              <span>{record.purchaseDate}</span>
-              <span className="font-medium">&times; {record.units}</span>
-            </div>
             <Button
               type="button"
               size="icon-xs"
               variant="ghost"
-              onClick={() => onDeleteRecord(record)}
-              aria-label="Delete purchase"
-              className="text-muted-foreground hover:text-destructive"
+              onClick={handleUndoDepleted}
+              aria-label="Undo mark as depleted"
+              className="text-muted-foreground hover:text-foreground"
             >
-              <Trash2 className="size-3" />
+              <X className="size-3.5" />
             </Button>
-          </div>
-        ))}
+          ) : (
+            <Button
+              type="button"
+              size="icon-xs"
+              variant="ghost"
+              onClick={handleMarkDepleted}
+              aria-label="Mark as depleted"
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <Frown className="size-3.5" />
+            </Button>
+          )}
+        </div>
       </div>
+      {group.records.length > 0 && (
+        <div className="divide-y divide-border border-t border-dashed border-muted-foreground/20">
+          {group.records.map(record => (
+            <div key={record.id} className="flex items-center justify-between px-4 py-2">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Clock className="size-3 shrink-0" />
+                <span>{record.purchaseDate}</span>
+                <span className="font-medium text-foreground/70">&times; {record.units}</span>
+              </div>
+              <Button
+                type="button"
+                size="icon-xs"
+                variant="ghost"
+                onClick={() => onDeleteRecord(record)}
+                aria-label="Delete purchase"
+                className="text-muted-foreground/50 hover:text-destructive"
+              >
+                <Trash2 className="size-3" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
